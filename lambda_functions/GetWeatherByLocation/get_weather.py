@@ -1,7 +1,8 @@
 import json
 import requests
 import os
-from lambda_functions.common.logger import log_to_s3  
+from lambda_functions.common.logger import log_to_s3
+
 
 def _response(status_code, body_dict):
     return {
