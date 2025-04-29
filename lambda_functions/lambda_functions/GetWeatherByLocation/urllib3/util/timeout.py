@@ -118,7 +118,11 @@ class Timeout:
         self._start_connect: float | None = None
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(connect={self._connect!r}, read={self._read!r}, total={self.total!r})"
+        return f"{
+            type(self).__name__}(connect={
+            self._connect!r}, read={
+            self._read!r}, total={
+                self.total!r})"
 
     # __str__ provided for backwards compatibility
     __str__ = __repr__
@@ -128,7 +132,10 @@ class Timeout:
         return getdefaulttimeout() if timeout is _DEFAULT_TIMEOUT else timeout
 
     @classmethod
-    def _validate_timeout(cls, value: _TYPE_TIMEOUT, name: str) -> _TYPE_TIMEOUT:
+    def _validate_timeout(
+            cls,
+            value: _TYPE_TIMEOUT,
+            name: str) -> _TYPE_TIMEOUT:
         """Check that a timeout attribute is valid.
 
         :param value: The timeout value to validate
@@ -197,7 +204,10 @@ class Timeout:
         # We can't use copy.deepcopy because that will also create a new object
         # for _GLOBAL_DEFAULT_TIMEOUT, which socket.py uses as a sentinel to
         # detect the user default.
-        return Timeout(connect=self._connect, read=self._read, total=self.total)
+        return Timeout(
+            connect=self._connect,
+            read=self._read,
+            total=self.total)
 
     def start_connect(self) -> float:
         """Start the timeout clock, used during a connect() attempt
@@ -268,7 +278,8 @@ class Timeout:
             # In case the connect timeout has not yet been established.
             if self._start_connect is None:
                 return self._read
-            return max(0, min(self.total - self.get_connect_duration(), self._read))
+            return max(0, min(self.total -
+                              self.get_connect_duration(), self._read))
         elif self.total is not None and self.total is not _DEFAULT_TIMEOUT:
             return max(0, self.total - self.get_connect_duration())
         else:

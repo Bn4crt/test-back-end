@@ -23,7 +23,8 @@ T = typing.TypeVar("T")
 log = logging.getLogger(__name__)
 
 RE_IS_LEGAL_HEADER_NAME = re.compile(rb"^[!#$%&'*+\-.^_`|~0-9a-z]+$")
-RE_IS_ILLEGAL_HEADER_VALUE = re.compile(rb"[\0\x00\x0a\x0d\r\n]|^[ \r\n\t]|[ \r\n\t]$")
+RE_IS_ILLEGAL_HEADER_VALUE = re.compile(
+    rb"[\0\x00\x0a\x0d\r\n]|^[ \r\n\t]|[ \r\n\t]$")
 
 
 def _is_legal_header_name(name: bytes) -> bool:
@@ -140,10 +141,12 @@ class HTTP2Connection(HTTPSConnection):
         with self._h2_conn as conn:
             self._h2_stream = conn.get_next_available_stream_id()
 
-    def putheader(self, header: str | bytes, *values: str | bytes) -> None:  # type: ignore[override]
+    # type: ignore[override]
+    def putheader(self, header: str | bytes, *values: str | bytes) -> None:
         # TODO SKIPPABLE_HEADERS from urllib3 are ignored.
         header = header.encode() if isinstance(header, str) else header
-        header = header.lower()  # A lot of upstream code uses capitalized headers.
+        # A lot of upstream code uses capitalized headers.
+        header = header.lower()
         if not _is_legal_header_name(header):
             raise ValueError(f"Illegal header name {str(header)}")
 
@@ -153,7 +156,8 @@ class HTTP2Connection(HTTPSConnection):
                 raise ValueError(f"Illegal header value {str(value)}")
             self._headers.append((header, value))
 
-    def endheaders(self, message_body: typing.Any = None) -> None:  # type: ignore[override]
+    # type: ignore[override]
+    def endheaders(self, message_body: typing.Any = None) -> None:
         if self._h2_stream is None:
             raise ConnectionError("Must call `putrequest` first.")
 
@@ -202,7 +206,8 @@ class HTTP2Connection(HTTPSConnection):
                         self.sock.sendall(data_to_send)
                 else:
                     for chunk in data:
-                        conn.send_data(self._h2_stream, chunk, end_stream=False)
+                        conn.send_data(
+                            self._h2_stream, chunk, end_stream=False)
                         if data_to_send := conn.data_to_send():
                             self.sock.sendall(data_to_send)
                     conn.end_stream(self._h2_stream)
@@ -242,8 +247,7 @@ class HTTP2Connection(HTTPSConnection):
                                     status = int(value.decode())
                                 else:
                                     headers.add(
-                                        header.decode("ascii"), value.decode("ascii")
-                                    )
+                                        header.decode("ascii"), value.decode("ascii"))
 
                         elif isinstance(event, h2.events.DataReceived):
                             data += event.data
@@ -322,7 +326,8 @@ class HTTP2Connection(HTTPSConnection):
 
 
 class HTTP2Response(BaseHTTPResponse):
-    # TODO: This is a woefully incomplete response object, but works for non-streaming.
+    # TODO: This is a woefully incomplete response object, but works for
+    # non-streaming.
     def __init__(
         self,
         status: int,
@@ -334,7 +339,8 @@ class HTTP2Response(BaseHTTPResponse):
         super().__init__(
             status=status,
             headers=headers,
-            # Following CPython, we map HTTP versions to major * 10 + minor integers
+            # Following CPython, we map HTTP versions to major * 10 + minor
+            # integers
             version=20,
             version_string="HTTP/2",
             # No reason phrase in HTTP/2

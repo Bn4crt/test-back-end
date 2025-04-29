@@ -9,6 +9,7 @@ from logger import log_to_s3
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('RegisteredUsers')
 
+
 def lambda_handler(event, context):
     print("📥 EVENT:", json.dumps(event))
 
@@ -37,7 +38,8 @@ def lambda_handler(event, context):
                 "email": email,
                 "error": "Password format invalid"
             }, prefix="logs/registeruser")
-            return error_response("Password must be 8–12 chars, include upper, lower, digit, special", 400)
+            return error_response(
+                "Password must be 8–12 chars, include upper, lower, digit, special", 400)
 
         # Check if user already exists
         response = table.get_item(Key={'email': email})
@@ -49,7 +51,10 @@ def lambda_handler(event, context):
             return error_response("User already exists", 409)
 
         # Hash and save
-        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=8)).decode('utf-8')
+        hashed_pw = bcrypt.hashpw(
+            password.encode('utf-8'),
+            bcrypt.gensalt(
+                rounds=8)).decode('utf-8')
 
         table.put_item(Item={
             'email': email,
@@ -76,19 +81,25 @@ def lambda_handler(event, context):
         print("❌ Exception:", str(e))
         return error_response("Server error: " + str(e), 500)
 
+
 def validate_password(pw):
-    return bool(re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,12}$', pw))
+    return bool(
+        re.match(
+            r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,12}$',
+            pw))
+
 
 def success_response(message):
     return {
         "statusCode": 200,
-        "headers": { "Access-Control-Allow-Origin": "*" },
-        "body": json.dumps({ "message": message })
+        "headers": {"Access-Control-Allow-Origin": "*"},
+        "body": json.dumps({"message": message})
     }
+
 
 def error_response(message, code):
     return {
         "statusCode": code,
-        "headers": { "Access-Control-Allow-Origin": "*" },
-        "body": json.dumps({ "error": message })
+        "headers": {"Access-Control-Allow-Origin": "*"},
+        "body": json.dumps({"error": message})
     }

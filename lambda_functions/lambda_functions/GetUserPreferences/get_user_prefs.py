@@ -5,6 +5,7 @@ from lambda_functions.common.logger import log_to_s3
 
 dynamodb = boto3.client("dynamodb")
 
+
 def lambda_handler(event, context):
     email = event.get("queryStringParameters", {}).get("email")
 

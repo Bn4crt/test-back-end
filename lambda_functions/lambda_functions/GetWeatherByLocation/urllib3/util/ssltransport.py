@@ -31,7 +31,8 @@ class SSLTransport:
     """
 
     @staticmethod
-    def _validate_ssl_context_for_tls_in_tls(ssl_context: ssl.SSLContext) -> None:
+    def _validate_ssl_context_for_tls_in_tls(
+            ssl_context: ssl.SSLContext) -> None:
         """
         Raises a ProxySchemeUnsupported if the provided ssl_context can't be used
         for TLS in TLS.
@@ -78,7 +79,8 @@ class SSLTransport:
     def fileno(self) -> int:
         return self.socket.fileno()
 
-    def read(self, len: int = 1024, buffer: typing.Any | None = None) -> int | bytes:
+    def read(self, len: int = 1024, buffer: typing.Any |
+             None = None) -> int | bytes:
         return self._wrap_ssl_read(len, buffer)
 
     def recv(self, buflen: int = 1024, flags: int = 0) -> int | bytes:
@@ -93,7 +95,8 @@ class SSLTransport:
         flags: int = 0,
     ) -> None | int | bytes:
         if flags != 0:
-            raise ValueError("non-zero flags not allowed in calls to recv_into")
+            raise ValueError(
+                "non-zero flags not allowed in calls to recv_into")
         if nbytes is None:
             nbytes = len(buffer)
         return self.read(nbytes, buffer)
@@ -153,7 +156,8 @@ class SSLTransport:
             return raw
         buffer: typing.BinaryIO
         if reading and writing:
-            buffer = io.BufferedRWPair(raw, raw, buffering)  # type: ignore[assignment]
+            buffer = io.BufferedRWPair(
+                raw, raw, buffering)  # type: ignore[assignment]
         elif reading:
             buffer = io.BufferedReader(raw, buffering)
         else:
@@ -177,10 +181,13 @@ class SSLTransport:
     ) -> _TYPE_PEER_CERT_RET_DICT | None: ...
 
     @typing.overload
-    def getpeercert(self, binary_form: typing.Literal[True]) -> bytes | None: ...
+    def getpeercert(
+        self,
+        binary_form: typing.Literal[True]) -> bytes | None: ...
 
     def getpeercert(self, binary_form: bool = False) -> _TYPE_PEER_CERT_RET:
-        return self.sslobj.getpeercert(binary_form)  # type: ignore[return-value]
+        # type: ignore[return-value]
+        return self.sslobj.getpeercert(binary_form)
 
     def version(self) -> str | None:
         return self.sslobj.version()
@@ -206,7 +213,8 @@ class SSLTransport:
     def _decref_socketios(self) -> None:
         self.socket._decref_socketios()  # type: ignore[attr-defined]
 
-    def _wrap_ssl_read(self, len: int, buffer: bytearray | None = None) -> int | bytes:
+    def _wrap_ssl_read(self, len: int, buffer: bytearray |
+                       None = None) -> int | bytes:
         try:
             return self._ssl_io_loop(self.sslobj.read, len, buffer)
         except ssl.SSLError as e:
@@ -221,7 +229,8 @@ class SSLTransport:
 
     # func is sslobj.write, arg1 is data
     @typing.overload
-    def _ssl_io_loop(self, func: typing.Callable[[bytes], int], arg1: bytes) -> int: ...
+    def _ssl_io_loop(self, func: typing.Callable[[
+                     bytes], int], arg1: bytes) -> int: ...
 
     # func is sslobj.read, arg1 is len, arg2 is buffer
     @typing.overload
@@ -252,7 +261,9 @@ class SSLTransport:
                 else:
                     ret = func(arg1, arg2)
             except ssl.SSLError as e:
-                if e.errno not in (ssl.SSL_ERROR_WANT_READ, ssl.SSL_ERROR_WANT_WRITE):
+                if e.errno not in (
+                    ssl.SSL_ERROR_WANT_READ,
+                        ssl.SSL_ERROR_WANT_WRITE):
                     # WANT_READ, and WANT_WRITE are expected, others are not.
                     raise e
                 errno = e.errno

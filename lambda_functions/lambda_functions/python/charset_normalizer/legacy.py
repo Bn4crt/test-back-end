@@ -32,8 +32,10 @@ def detect(
     """
     if len(kwargs):
         warn(
-            f"charset-normalizer disregard arguments '{','.join(list(kwargs.keys()))}' in legacy function detect()"
-        )
+            f"charset-normalizer disregard arguments '{
+                ','.join(
+                    list(
+                        kwargs.keys()))}' in legacy function detect()")
 
     if not isinstance(byte_str, (bytearray, bytes)):
         raise TypeError(  # pragma: nocover

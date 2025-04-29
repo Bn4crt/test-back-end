@@ -4,6 +4,7 @@ import json
 import uuid
 from datetime import datetime
 
+
 def log_to_s3(log_data, prefix="logs/general"):
     s3 = boto3.client('s3')
     bucket = os.environ.get("LOG_BUCKET")
@@ -22,7 +23,11 @@ def log_to_s3(log_data, prefix="logs/general"):
         body = str(log_data)
 
     try:
-        s3.put_object(Bucket=bucket, Key=key, Body=body, ContentType="application/json")
+        s3.put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=body,
+            ContentType="application/json")
         print(f"✅ Logged to s3://{bucket}/{key}")
     except Exception as e:
         print(f"❌ Logging failed: {str(e)}")

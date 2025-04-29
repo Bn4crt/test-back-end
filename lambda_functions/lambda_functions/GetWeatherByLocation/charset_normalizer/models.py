@@ -85,9 +85,7 @@ class CharsetMatch:
         if not isinstance(other, CharsetMatch) or other == self:
             raise ValueError(
                 "Unable to add instance <{}> as a submatch of a CharsetMatch".format(
-                    other.__class__
-                )
-            )
+                    other.__class__))
 
         other._string = None  # Unload RAM usage; dirty trick.
         self._leaves.append(other)
@@ -133,7 +131,8 @@ class CharsetMatch:
         """
         if not self._languages:
             # Trying to infer the language based on the given encoding
-            # Its either English or we should not pronounce ourselves in certain cases.
+            # Its either English or we should not pronounce ourselves in
+            # certain cases.
             if "ascii" in self.could_be_from_charset:
                 return "English"
 
@@ -191,7 +190,8 @@ class CharsetMatch:
         if self._unicode_ranges is not None:
             return self._unicode_ranges
         # list detected ranges
-        detected_ranges: list[str | None] = [unicode_range(char) for char in str(self)]
+        detected_ranges: list[str | None] = [
+            unicode_range(char) for char in str(self)]
         # filter and sort
         self._unicode_ranges = sorted(list({r for r in detected_ranges if r}))
         return self._unicode_ranges
@@ -220,9 +220,11 @@ class CharsetMatch:
             ):
                 patched_header = sub(
                     RE_POSSIBLE_ENCODING_INDICATION,
-                    lambda m: m.string[m.span()[0] : m.span()[1]].replace(
+                    lambda m: m.string[m.span()[0]: m.span()[1]].replace(
                         m.groups()[0],
-                        iana_name(self._output_encoding).replace("_", "-"),  # type: ignore[arg-type]
+                        iana_name(
+                            self._output_encoding).replace(
+                            "_", "-"),  # type: ignore[arg-type]
                     ),
                     decoded_string[:8192],
                     count=1,
@@ -285,7 +287,8 @@ class CharsetMatches:
                     str(item.__class__)
                 )
             )
-        # We should disable the submatch factoring when the input file is too heavy (conserve RAM usage)
+        # We should disable the submatch factoring when the input file is too
+        # heavy (conserve RAM usage)
         if len(item.raw) < TOO_BIG_SEQUENCE:
             for match in self._results:
                 if match.fingerprint == item.fingerprint and match.chaos == item.chaos:

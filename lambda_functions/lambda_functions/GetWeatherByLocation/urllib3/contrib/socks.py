@@ -48,11 +48,9 @@ except ImportError:
     from ..exceptions import DependencyWarning
 
     warnings.warn(
-        (
-            "SOCKS support in urllib3 requires the installation of optional "
-            "dependencies: specifically, PySocks.  For more information, see "
-            "https://urllib3.readthedocs.io/en/latest/advanced-usage.html#socks-proxies"
-        ),
+        ("SOCKS support in urllib3 requires the installation of optional "
+         "dependencies: specifically, PySocks.  For more information, see "
+         "https://urllib3.readthedocs.io/en/latest/advanced-usage.html#socks-proxies"),
         DependencyWarning,
     )
     raise
@@ -121,9 +119,9 @@ class SOCKSConnection(HTTPConnection):
 
         except SocketTimeout as e:
             raise ConnectTimeoutError(
-                self,
-                f"Connection to {self.host} timed out. (connect timeout={self.timeout})",
-            ) from e
+                self, f"Connection to {
+                    self.host} timed out. (connect timeout={
+                    self.timeout})", ) from e
 
         except socks.ProxyError as e:
             # This is fragile as hell, but it seems to be the only way to raise
@@ -132,9 +130,9 @@ class SOCKSConnection(HTTPConnection):
                 error = e.socket_err
                 if isinstance(error, SocketTimeout):
                     raise ConnectTimeoutError(
-                        self,
-                        f"Connection to {self.host} timed out. (connect timeout={self.timeout})",
-                    ) from e
+                        self, f"Connection to {
+                            self.host} timed out. (connect timeout={
+                            self.timeout})", ) from e
                 else:
                     # Adding `from e` messes with coverage somehow, so it's omitted.
                     # See #2386.
@@ -209,7 +207,8 @@ class SOCKSProxyManager(PoolManager):
             socks_version = socks.PROXY_TYPE_SOCKS4
             rdns = True
         else:
-            raise ValueError(f"Unable to determine SOCKS version from {proxy_url}")
+            raise ValueError(
+                f"Unable to determine SOCKS version from {proxy_url}")
 
         self.proxy_url = proxy_url
 

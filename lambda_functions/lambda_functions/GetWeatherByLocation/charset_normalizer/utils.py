@@ -122,7 +122,8 @@ def is_separator(character: str) -> bool:
 
     character_category: str = unicodedata.category(character)
 
-    return "Z" in character_category or character_category in {"Po", "Pd", "Pc"}
+    return "Z" in character_category or character_category in {
+        "Po", "Pd", "Pc"}
 
 
 @lru_cache(maxsize=UTF8_MAXIMAL_ALLOCATION)
@@ -202,7 +203,8 @@ def is_arabic_isolated_form(character: str) -> bool:
 
 @lru_cache(maxsize=len(UNICODE_RANGES_COMBINED))
 def is_unicode_range_secondary(range_name: str) -> bool:
-    return any(keyword in range_name for keyword in UNICODE_SECONDARY_RANGE_KEYWORD)
+    return any(
+        keyword in range_name for keyword in UNICODE_SECONDARY_RANGE_KEYWORD)
 
 
 @lru_cache(maxsize=UTF8_MAXIMAL_ALLOCATION)
@@ -212,11 +214,13 @@ def is_unprintable(character: str) -> bool:
         and character.isprintable() is False
         and character != "\x1a"  # Why? Its the ASCII substitute character.
         and character != "\ufeff"  # bug discovered in Python,
-        # Zero Width No-Break Space located in 	Arabic Presentation Forms-B, Unicode 1.1 not acknowledged as space.
+        # Zero Width No-Break Space located in    Arabic Presentation Forms-B,
+        # Unicode 1.1 not acknowledged as space.
     )
 
 
-def any_specified_encoding(sequence: bytes, search_zone: int = 8192) -> str | None:
+def any_specified_encoding(sequence: bytes,
+                           search_zone: int = 8192) -> str | None:
     """
     Extract using ASCII-only decoder any specified encoding in the first n-bytes.
     """
@@ -309,11 +313,14 @@ def iana_name(cp_name: str, strict: bool = True) -> str:
 
 
 def cp_similarity(iana_name_a: str, iana_name_b: str) -> float:
-    if is_multi_byte_encoding(iana_name_a) or is_multi_byte_encoding(iana_name_b):
+    if is_multi_byte_encoding(
+            iana_name_a) or is_multi_byte_encoding(iana_name_b):
         return 0.0
 
-    decoder_a = importlib.import_module(f"encodings.{iana_name_a}").IncrementalDecoder
-    decoder_b = importlib.import_module(f"encodings.{iana_name_b}").IncrementalDecoder
+    decoder_a = importlib.import_module(
+        f"encodings.{iana_name_a}").IncrementalDecoder
+    decoder_b = importlib.import_module(
+        f"encodings.{iana_name_b}").IncrementalDecoder
 
     id_a: IncrementalDecoder = decoder_a(errors="ignore")
     id_b: IncrementalDecoder = decoder_b(errors="ignore")
@@ -365,7 +372,7 @@ def cut_sequence_chunks(
 ) -> Generator[str, None, None]:
     if decoded_payload and is_multi_byte_decoder is False:
         for i in offsets:
-            chunk = decoded_payload[i : i + chunk_size]
+            chunk = decoded_payload[i: i + chunk_size]
             if not chunk:
                 break
             yield chunk
@@ -375,7 +382,7 @@ def cut_sequence_chunks(
             if chunk_end > len(sequences) + 8:
                 continue
 
-            cut_sequence = sequences[i : i + chunk_size]
+            cut_sequence = sequences[i: i + chunk_size]
 
             if bom_or_sig_available and strip_sig_or_bom is False:
                 cut_sequence = sig_payload + cut_sequence
@@ -386,7 +393,8 @@ def cut_sequence_chunks(
             )
 
             # multi-byte bad cutting detector and adjustment
-            # not the cleanest way to perform that fix but clever enough for now.
+            # not the cleanest way to perform that fix but clever enough for
+            # now.
             if is_multi_byte_decoder and i > 0:
                 chunk_partial_size_chk: int = min(chunk_size, 16)
 
@@ -400,7 +408,8 @@ def cut_sequence_chunks(
                         if bom_or_sig_available and strip_sig_or_bom is False:
                             cut_sequence = sig_payload + cut_sequence
 
-                        chunk = cut_sequence.decode(encoding_iana, errors="ignore")
+                        chunk = cut_sequence.decode(
+                            encoding_iana, errors="ignore")
 
                         if chunk[:chunk_partial_size_chk] in decoded_payload:
                             break

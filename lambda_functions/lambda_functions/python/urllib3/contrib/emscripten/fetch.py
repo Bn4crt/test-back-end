@@ -143,7 +143,8 @@ class _ReadStream(io.RawIOBase):
         self._is_closed = True
         self.request = None
         if self.is_live:
-            self.worker.postMessage(_obj_from_dict({"close": self.connection_id}))
+            self.worker.postMessage(_obj_from_dict(
+                {"close": self.connection_id}))
             self.is_live = False
         super().close()
 
@@ -166,11 +167,10 @@ class _ReadStream(io.RawIOBase):
         if self.read_len == 0:
             # wait for the worker to send something
             js.Atomics.store(self.int_buffer, 0, ERROR_TIMEOUT)
-            self.worker.postMessage(_obj_from_dict({"getMore": self.connection_id}))
-            if (
-                js.Atomics.wait(self.int_buffer, 0, ERROR_TIMEOUT, self.timeout)
-                == "timed-out"
-            ):
+            self.worker.postMessage(_obj_from_dict(
+                {"getMore": self.connection_id}))
+            if (js.Atomics.wait(self.int_buffer, 0,
+                                ERROR_TIMEOUT, self.timeout) == "timed-out"):
                 raise _TimeoutError
             data_len = self.int_buffer[0]
             if data_len > 0:
@@ -180,7 +180,8 @@ class _ReadStream(io.RawIOBase):
                 string_len = self.int_buffer[1]
                 # decode the error string
                 js_decoder = js.TextDecoder.new()
-                json_str = js_decoder.decode(self.byte_buffer.slice(0, string_len))
+                json_str = js_decoder.decode(
+                    self.byte_buffer.slice(0, string_len))
                 raise _StreamingError(
                     f"Exception thrown in fetch: {json_str}",
                     request=self.request,
@@ -213,7 +214,9 @@ class _StreamingFetcher:
             _obj_from_dict({"type": "application/javascript"}),
         )
 
-        def promise_resolver(js_resolve_fn: JsProxy, js_reject_fn: JsProxy) -> None:
+        def promise_resolver(
+                js_resolve_fn: JsProxy,
+                js_reject_fn: JsProxy) -> None:
             def onMsg(e: JsProxy) -> None:
                 self.streaming_ready = True
                 js_resolve_fn(e)
@@ -226,15 +229,19 @@ class _StreamingFetcher:
 
         js_data_url = js.URL.createObjectURL(js_data_blob)
         self.js_worker = js.globalThis.Worker.new(js_data_url)
-        self.js_worker_ready_promise = js.globalThis.Promise.new(promise_resolver)
+        self.js_worker_ready_promise = js.globalThis.Promise.new(
+            promise_resolver)
 
     def send(self, request: EmscriptenRequest) -> EmscriptenResponse:
         headers = {
-            k: v for k, v in request.headers.items() if k not in HEADERS_TO_IGNORE
-        }
+            k: v for k,
+            v in request.headers.items() if k not in HEADERS_TO_IGNORE}
 
         body = request.body
-        fetch_data = {"headers": headers, "body": to_js(body), "method": request.method}
+        fetch_data = {
+            "headers": headers,
+            "body": to_js(body),
+            "method": request.method}
         # start the request off in the worker
         timeout = int(1000 * request.timeout) if request.timeout > 0 else None
         js_shared_buffer = js.SharedArrayBuffer.new(1048576)
@@ -291,8 +298,9 @@ class _StreamingFetcher:
             js_decoder = js.TextDecoder.new()
             json_str = js_decoder.decode(js_byte_buffer.slice(0, string_len))
             raise _StreamingError(
-                f"Exception thrown in fetch: {json_str}", request=request, response=None
-            )
+                f"Exception thrown in fetch: {json_str}",
+                request=request,
+                response=None)
         else:
             raise _StreamingError(
                 f"Unknown status from worker in fetch: {js_int_buffer[0]}",
@@ -400,7 +408,7 @@ class _JSPIReadStream(io.RawIOBase):
             len(byte_obj), len(self.current_buffer) - self.current_buffer_pos
         )
         byte_obj[0:ret_length] = self.current_buffer[
-            self.current_buffer_pos : self.current_buffer_pos + ret_length
+            self.current_buffer_pos: self.current_buffer_pos + ret_length
         ]
         self.current_buffer_pos += ret_length
         if self.current_buffer_pos == len(self.current_buffer):
@@ -410,7 +418,8 @@ class _JSPIReadStream(io.RawIOBase):
 
 # check if we are in a worker or not
 def is_in_browser_main_thread() -> bool:
-    return hasattr(js, "window") and hasattr(js, "self") and js.self == js.window
+    return hasattr(js, "window") and hasattr(
+        js, "self") and js.self == js.window
 
 
 def is_cross_origin_isolated() -> bool:
@@ -448,7 +457,8 @@ NODE_JSPI_ERROR = (
 )
 
 
-def send_streaming_request(request: EmscriptenRequest) -> EmscriptenResponse | None:
+def send_streaming_request(
+        request: EmscriptenRequest) -> EmscriptenResponse | None:
     if has_jspi():
         return send_jspi_request(request, True)
     elif is_in_node():
@@ -489,7 +499,8 @@ def _show_streaming_warning() -> None:
         if is_in_browser_main_thread():
             message += "  Python is running in main browser thread\n"
         if not is_worker_available():
-            message += " Worker or Blob classes are not available in this environment."  # Defensive: this is always False in browsers that we test in
+            # Defensive: this is always False in browsers that we test in
+            message += " Worker or Blob classes are not available in this environment."
         if streaming_ready() is False:
             message += """ Streaming fetch worker isn't ready. If you want to be sure that streaming fetch
 is working, you need to call: 'await urllib3.contrib.emscripten.fetch.wait_for_streaming_ready()`"""
@@ -535,8 +546,10 @@ def send_request(request: EmscriptenRequest) -> EmscriptenResponse:
         else:
             body = js_xhr.response.encode("ISO-8859-15")
         return EmscriptenResponse(
-            status_code=js_xhr.status, headers=headers, body=body, request=request
-        )
+            status_code=js_xhr.status,
+            headers=headers,
+            body=body,
+            request=request)
     except JsException as err:
         if err.name == "TimeoutError":
             raise _TimeoutError(err.message, request=request)
@@ -565,7 +578,9 @@ def send_jspi_request(
     """
     timeout = request.timeout
     js_abort_controller = js.AbortController.new()
-    headers = {k: v for k, v in request.headers.items() if k not in HEADERS_TO_IGNORE}
+    headers = {
+        k: v for k,
+        v in request.headers.items() if k not in HEADERS_TO_IGNORE}
     req_body = request.body
     fetch_data = {
         "headers": headers,
@@ -653,9 +668,8 @@ def _run_sync_with_timeout(
     """
     timer_id = None
     if timeout > 0:
-        timer_id = js.setTimeout(
-            js_abort_controller.abort.bind(js_abort_controller), int(timeout * 1000)
-        )
+        timer_id = js.setTimeout(js_abort_controller.abort.bind(
+            js_abort_controller), int(timeout * 1000))
     try:
         from pyodide.ffi import run_sync
 
@@ -668,7 +682,10 @@ def _run_sync_with_timeout(
                 message="Request timed out", request=request, response=response
             )
         else:
-            raise _RequestError(message=err.message, request=request, response=response)
+            raise _RequestError(
+                message=err.message,
+                request=request,
+                response=response)
     finally:
         if timer_id is not None:
             js.clearTimeout(timer_id)

@@ -14,6 +14,7 @@ def _response(status_code, body_dict):
         "body": json.dumps(body_dict)
     }
 
+
 def lambda_handler(event, context):
     try:
         params = event.get("queryStringParameters", {}) or {}
@@ -26,7 +27,9 @@ def lambda_handler(event, context):
                 "error": "No location or coordinates provided",
                 "event": event
             }, prefix="logs/weather")
-            return _response(400, {"error": "No location or coordinates provided"})
+            return _response(
+                400, {
+                    "error": "No location or coordinates provided"})
 
         api_key = os.environ.get("WEATHER_API_KEY")
         if not api_key:
@@ -34,7 +37,9 @@ def lambda_handler(event, context):
                 "error": "Missing WEATHER_API_KEY",
                 "env": dict(os.environ)
             }, prefix="logs/weather")
-            return _response(500, {"error": "Missing WEATHER_API_KEY in environment"})
+            return _response(
+                500, {
+                    "error": "Missing WEATHER_API_KEY in environment"})
 
         # Build API URL
         if lat and lon:
@@ -57,7 +62,9 @@ def lambda_handler(event, context):
                 "error": "Incomplete weather data",
                 "api_response": data
             }, prefix="logs/weather")
-            return _response(500, {"error": "Incomplete weather data received"})
+            return _response(
+                500, {
+                    "error": "Incomplete weather data received"})
 
         # ✅ Optionally log successful lookup
         log_to_s3({

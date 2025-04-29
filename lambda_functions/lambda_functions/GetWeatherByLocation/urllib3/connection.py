@@ -104,13 +104,13 @@ class HTTPConnection(_HTTPConnection):
       Or you may want to disable the defaults by passing an empty list (e.g., ``[]``).
     """
 
-    default_port: typing.ClassVar[int] = port_by_scheme["http"]  # type: ignore[misc]
+    # type: ignore[misc]
+    default_port: typing.ClassVar[int] = port_by_scheme["http"]
 
     #: Disable Nagle's algorithm by default.
     #: ``[(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]``
     default_socket_options: typing.ClassVar[connection._TYPE_SOCKET_OPTIONS] = [
-        (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-    ]
+        (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
 
     #: Whether this connection verifies the host's certificate.
     is_verified: bool = False
@@ -205,9 +205,9 @@ class HTTPConnection(_HTTPConnection):
             raise NameResolutionError(self.host, self, e) from e
         except SocketTimeout as e:
             raise ConnectTimeoutError(
-                self,
-                f"Connection to {self.host} timed out. (connect timeout={self.timeout})",
-            ) from e
+                self, f"Connection to {
+                    self.host} timed out. (connect timeout={
+                    self.timeout})", ) from e
 
         except OSError as e:
             raise NewConnectionError(
@@ -227,8 +227,8 @@ class HTTPConnection(_HTTPConnection):
     ) -> None:
         if scheme not in ("http", "https"):
             raise ValueError(
-                f"Invalid proxy scheme for tunneling: {scheme!r}, must be either 'http' or 'https'"
-            )
+                f"Invalid proxy scheme for tunneling: {
+                    scheme!r}, must be either 'http' or 'https'")
         super().set_tunnel(host, port=port, headers=headers)
         self._tunnel_scheme = scheme
 
@@ -241,7 +241,8 @@ class HTTPConnection(_HTTPConnection):
                 self._tunnel_port,
             )
             headers = [connect]
-            for header, value in self._tunnel_headers.items():  # type: ignore[attr-defined]
+            for header, value in self._tunnel_headers.items(
+            ):  # type: ignore[attr-defined]
                 headers.append(f"{header}: {value}\r\n".encode("latin-1"))
             headers.append(b"\r\n")
             # Making a single send() call instead of one per line encourages
@@ -250,13 +251,17 @@ class HTTPConnection(_HTTPConnection):
             self.send(b"".join(headers))
             del headers
 
-            response = self.response_class(self.sock, method=self._method)  # type: ignore[attr-defined]
+            response = self.response_class(
+                self.sock, method=self._method)  # type: ignore[attr-defined]
             try:
-                (version, code, message) = response._read_status()  # type: ignore[attr-defined]
+                # type: ignore[attr-defined]
+                (version, code, message) = response._read_status()
 
                 if code != http.HTTPStatus.OK:
                     self.close()
-                    raise OSError(f"Tunnel connection failed: {code} {message.strip()}")
+                    raise OSError(
+                        f"Tunnel connection failed: {code} {
+                            message.strip()}")
                 while True:
                     line = response.fp.readline(_MAXLINE + 1)
                     if len(line) > _MAXLINE:
@@ -345,14 +350,15 @@ class HTTPConnection(_HTTPConnection):
         match = _CONTAINS_CONTROL_CHAR_RE.search(method)
         if match:
             raise ValueError(
-                f"Method cannot contain non-token characters {method!r} (found at least {match.group()!r})"
-            )
+                f"Method cannot contain non-token characters {
+                    method!r} (found at least {
+                    match.group()!r})")
 
-        return super().putrequest(
-            method, url, skip_host=skip_host, skip_accept_encoding=skip_accept_encoding
-        )
+        return super().putrequest(method, url, skip_host=skip_host,
+                                  skip_accept_encoding=skip_accept_encoding)
 
-    def putheader(self, header: str, *values: str) -> None:  # type: ignore[override]
+    # type: ignore[override]
+    def putheader(self, header: str, *values: str) -> None:
         """"""
         if not any(isinstance(v, str) and v == SKIP_HEADER for v in values):
             super().putheader(header, *values)
@@ -365,7 +371,8 @@ class HTTPConnection(_HTTPConnection):
             )
 
     # `request` method's signature intentionally violates LSP.
-    # urllib3's API is different from `http.client.HTTPConnection` and the subclassing is only incidental.
+    # urllib3's API is different from `http.client.HTTPConnection` and the
+    # subclassing is only incidental.
     def request(  # type: ignore[override]
         self,
         method: str,
@@ -405,12 +412,15 @@ class HTTPConnection(_HTTPConnection):
         skip_accept_encoding = "accept-encoding" in header_keys
         skip_host = "host" in header_keys
         self.putrequest(
-            method, url, skip_accept_encoding=skip_accept_encoding, skip_host=skip_host
-        )
+            method,
+            url,
+            skip_accept_encoding=skip_accept_encoding,
+            skip_host=skip_host)
 
         # Transform the body into an iterable of sendall()-able chunks
         # and detect if an explicit Content-Length is doable.
-        chunks_and_cl = body_to_chunks(body, method=method, blocksize=self.blocksize)
+        chunks_and_cl = body_to_chunks(
+            body, method=method, blocksize=self.blocksize)
         chunks = chunks_and_cl.chunks
         content_length = chunks_and_cl.content_length
 
@@ -437,7 +447,8 @@ class HTTPConnection(_HTTPConnection):
                 else:
                     self.putheader("Content-Length", str(content_length))
 
-        # Now that framing headers are out of the way we send all the other headers.
+        # Now that framing headers are out of the way we send all the other
+        # headers.
         if "user-agent" not in header_keys:
             self.putheader("User-Agent", _get_default_user_agent())
         for header, value in headers.items():
@@ -709,7 +720,8 @@ class HTTPSConnection(HTTPConnection):
             if self.proxy_is_tunneling:
                 # We're tunneling to an HTTPS origin so need to do TLS-in-TLS.
                 if self._tunnel_scheme == "https":
-                    # _connect_tls_proxy will verify and assign proxy_is_verified
+                    # _connect_tls_proxy will verify and assign
+                    # proxy_is_verified
                     self.sock = sock = self._connect_tls_proxy(self.host, sock)
                     tls_in_tls = True
                 elif self._tunnel_scheme == "http":
@@ -735,7 +747,8 @@ class HTTPSConnection(HTTPConnection):
                     SystemTimeWarning,
                 )
 
-            # Remove trailing '.' from fqdn hostnames to allow certificate validation
+            # Remove trailing '.' from fqdn hostnames to allow certificate
+            # validation
             server_hostname_rm_dot = server_hostname.rstrip(".")
 
             sock_and_verified = _ssl_wrap_socket_and_match_hostname(
@@ -770,8 +783,9 @@ class HTTPSConnection(HTTPConnection):
 
             if target_supports_http2 is None:
                 http2_probe.set_and_release(
-                    host=probe_http2_host, port=probe_http2_port, supports_http2=None
-                )
+                    host=probe_http2_host,
+                    port=probe_http2_port,
+                    supports_http2=None)
             raise
 
         # If this connection doesn't know if the origin supports HTTP/2
@@ -803,7 +817,10 @@ class HTTPSConnection(HTTPConnection):
         if self._has_connected_to_proxy and self.proxy_is_verified is None:
             self.proxy_is_verified = sock_and_verified.is_verified
 
-    def _connect_tls_proxy(self, hostname: str, sock: socket.socket) -> ssl.SSLSocket:
+    def _connect_tls_proxy(
+            self,
+            hostname: str,
+            sock: socket.socket) -> ssl.SSLSocket:
         """
         Establish a TLS connection to the proxy using the provided SSL context.
         """
@@ -940,17 +957,21 @@ def _ssl_wrap_socket_and_match_hostname(
             and not context.check_hostname
             and assert_hostname is not False
         ):
-            cert: _TYPE_PEER_CERT_RET_DICT = ssl_sock.getpeercert()  # type: ignore[assignment]
+            # type: ignore[assignment]
+            cert: _TYPE_PEER_CERT_RET_DICT = ssl_sock.getpeercert()
 
             # Need to signal to our match_hostname whether to use 'commonName' or not.
             # If we're using our own constructed SSLContext we explicitly set 'False'
-            # because PyPy hard-codes 'True' from SSLContext.hostname_checks_common_name.
+            # because PyPy hard-codes 'True' from
+            # SSLContext.hostname_checks_common_name.
             if default_ssl_context:
                 hostname_checks_common_name = False
             else:
                 hostname_checks_common_name = (
-                    getattr(context, "hostname_checks_common_name", False) or False
-                )
+                    getattr(
+                        context,
+                        "hostname_checks_common_name",
+                        False) or False)
 
             _match_hostname(
                 cert,
@@ -1011,8 +1032,8 @@ def _wrap_proxy_error(err: Exception, proxy_scheme: str | None) -> ProxyError:
         "#https-proxy-error-http-proxy"
     )
     new_err = ProxyError(
-        f"Unable to connect to proxy"
-        f"{http_proxy_warning if is_likely_http_proxy and proxy_scheme == 'https' else ''}",
+        f"Unable to connect to proxy" f"{
+            http_proxy_warning if is_likely_http_proxy and proxy_scheme == 'https' else ''}",
         err,
     )
     new_err.__cause__ = err

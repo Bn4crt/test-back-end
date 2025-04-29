@@ -7,6 +7,7 @@ from logger import log_to_s3
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('RegisteredUsers')
 
+
 def lambda_handler(event, context):
     print("📥 EVENT:", json.dumps(event))
 
@@ -40,7 +41,9 @@ def lambda_handler(event, context):
             }, prefix="logs/login")
             return error_response("User not found", 404)
 
-        if not bcrypt.checkpw(password.encode('utf-8'), item['password'].encode('utf-8')):
+        if not bcrypt.checkpw(
+                password.encode('utf-8'),
+                item['password'].encode('utf-8')):
             log_to_s3({
                 "email": email,
                 "error": "Incorrect password"
@@ -63,16 +66,18 @@ def lambda_handler(event, context):
         print("❌ Exception:", str(e))
         return error_response(f"Server error: {str(e)}", 500)
 
+
 def success_response(message):
     return {
         "statusCode": 200,
-        "headers": { "Access-Control-Allow-Origin": "*" },
-        "body": json.dumps({ "message": message })
+        "headers": {"Access-Control-Allow-Origin": "*"},
+        "body": json.dumps({"message": message})
     }
+
 
 def error_response(message, code):
     return {
         "statusCode": code,
-        "headers": { "Access-Control-Allow-Origin": "*" },
-        "body": json.dumps({ "error": message })
+        "headers": {"Access-Control-Allow-Origin": "*"},
+        "body": json.dumps({"error": message})
     }

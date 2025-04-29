@@ -7,6 +7,7 @@ from lambda_functions.common.logger import log_to_s3
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('RegisteredUsers')
 
+
 def lambda_handler(event, context):
     try:
         if 'body' not in event:
@@ -46,7 +47,8 @@ def lambda_handler(event, context):
 
         # Update password if present
         if 'password' in body:
-            item['password'] = bcrypt.hashpw(body['password'].encode(), bcrypt.gensalt()).decode()
+            item['password'] = bcrypt.hashpw(
+                body['password'].encode(), bcrypt.gensalt()).decode()
 
         # Update email
         item['email'] = new_email
@@ -72,16 +74,18 @@ def lambda_handler(event, context):
 
         return error_response("Server error: " + str(e), 500)
 
+
 def success_response(message):
     return {
         "statusCode": 200,
-        "headers": { "Access-Control-Allow-Origin": "*" },
-        "body": json.dumps({ "message": message })
+        "headers": {"Access-Control-Allow-Origin": "*"},
+        "body": json.dumps({"message": message})
     }
+
 
 def error_response(message, code):
     return {
         "statusCode": code,
-        "headers": { "Access-Control-Allow-Origin": "*" },
-        "body": json.dumps({ "error": message })
+        "headers": {"Access-Control-Allow-Origin": "*"},
+        "body": json.dumps({"error": message})
     }

@@ -36,7 +36,8 @@ else:
     # valid zstd stream was fed into the ZstdDecoder.
     # See: https://github.com/urllib3/urllib3/pull/2624
     _zstd_version = tuple(
-        map(int, re.search(r"^([0-9]+)\.([0-9]+)", zstd.__version__).groups())  # type: ignore[union-attr]
+        # type: ignore[union-attr]
+        map(int, re.search(r"^([0-9]+)\.([0-9]+)", zstd.__version__).groups())
     )
     if _zstd_version < (0, 18):  # Defensive:
         HAS_ZSTD = False
@@ -476,8 +477,7 @@ class BaseHTTPResponse(io.IOBase):
             if self._has_decoded_content:
                 raise RuntimeError(
                     "Calling read(decode_content=False) is not supported after "
-                    "read(decode_content=True) was called."
-                )
+                    "read(decode_content=True) was called.")
             return data
 
         try:
@@ -733,7 +733,9 @@ class HTTPResponse(BaseHTTPResponse):
             status = 0
 
         # Check for responses that shouldn't include a body
-        if status in (204, 304) or 100 <= status < 200 or request_method == "HEAD":
+        if status in (
+                204,
+                304) or 100 <= status < 200 or request_method == "HEAD":
             length = 0
 
         return length
@@ -756,15 +758,19 @@ class HTTPResponse(BaseHTTPResponse):
             except SocketTimeout as e:
                 # FIXME: Ideally we'd like to include the url in the ReadTimeoutError but
                 # there is yet no clean way to get at it from this context.
-                raise ReadTimeoutError(self._pool, None, "Read timed out.") from e  # type: ignore[arg-type]
+                raise ReadTimeoutError(
+                    self._pool, None, "Read timed out.") from e  # type: ignore[arg-type]
 
             except BaseSSLError as e:
-                # FIXME: Is there a better way to differentiate between SSLErrors?
+                # FIXME: Is there a better way to differentiate between
+                # SSLErrors?
                 if "read operation timed out" not in str(e):
-                    # SSL errors related to framing/MAC get wrapped and reraised here
+                    # SSL errors related to framing/MAC get wrapped and
+                    # reraised here
                     raise SSLError(e) from e
 
-                raise ReadTimeoutError(self._pool, None, "Read timed out.") from e  # type: ignore[arg-type]
+                raise ReadTimeoutError(
+                    self._pool, None, "Read timed out.") from e  # type: ignore[arg-type]
 
             except IncompleteRead as e:
                 if (
@@ -897,7 +903,8 @@ class HTTPResponse(BaseHTTPResponse):
                     # addressing it here to make sure IncompleteRead is
                     # raised during streaming, so all calls with incorrect
                     # Content-Length are caught.
-                    raise IncompleteRead(self._fp_bytes_read, self.length_remaining)
+                    raise IncompleteRead(
+                        self._fp_bytes_read, self.length_remaining)
             elif read1 and (
                 (amt != 0 and not data) or self.length_remaining == len(data)
             ):
@@ -969,8 +976,7 @@ class HTTPResponse(BaseHTTPResponse):
                 if self._has_decoded_content:
                     raise RuntimeError(
                         "Calling read(decode_content=False) is not supported after "
-                        "read(decode_content=True) was called."
-                    )
+                        "read(decode_content=True) was called.")
                 return data
 
             decoded_data = self._decode(data, decode_content, flush_decoder)
@@ -981,7 +987,8 @@ class HTTPResponse(BaseHTTPResponse):
                 # For example, the GZ file header takes 10 bytes, we don't want to read
                 # it one byte at a time
                 data = self._raw_read(amt)
-                decoded_data = self._decode(data, decode_content, flush_decoder)
+                decoded_data = self._decode(
+                    data, decode_content, flush_decoder)
                 self._decoded_buffer.put(decoded_data)
             data = self._decoded_buffer.get(amt)
 
@@ -1014,8 +1021,7 @@ class HTTPResponse(BaseHTTPResponse):
             if not decode_content:
                 raise RuntimeError(
                     "Calling read1(decode_content=False) is not supported after "
-                    "read1(decode_content=True) was called."
-                )
+                    "read1(decode_content=True) was called.")
             if len(self._decoded_buffer) > 0:
                 if amt is None:
                     return self._decoded_buffer.get_all()
@@ -1074,7 +1080,8 @@ class HTTPResponse(BaseHTTPResponse):
 
     def shutdown(self) -> None:
         if not self._sock_shutdown:
-            raise ValueError("Cannot shutdown socket as self._sock_shutdown is not set")
+            raise ValueError(
+                "Cannot shutdown socket as self._sock_shutdown is not set")
         self._sock_shutdown(socket.SHUT_RD)
 
     def close(self) -> None:
@@ -1092,7 +1099,8 @@ class HTTPResponse(BaseHTTPResponse):
     @property
     def closed(self) -> bool:
         if not self.auto_close:
-            return io.IOBase.closed.__get__(self)  # type: ignore[no-any-return]
+            # type: ignore[no-any-return]
+            return io.IOBase.closed.__get__(self)
         elif self._fp is None:
             return True
         elif hasattr(self._fp, "isclosed"):
@@ -1151,9 +1159,11 @@ class HTTPResponse(BaseHTTPResponse):
     def _handle_chunk(self, amt: int | None) -> bytes:
         returned_chunk = None
         if amt is None:
-            chunk = self._fp._safe_read(self.chunk_left)  # type: ignore[union-attr]
+            chunk = self._fp._safe_read(
+                self.chunk_left)  # type: ignore[union-attr]
             returned_chunk = chunk
-            self._fp._safe_read(2)  # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
+            # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
+            self._fp._safe_read(2)
             self.chunk_left = None
         elif self.chunk_left is not None and amt < self.chunk_left:
             value = self._fp._safe_read(amt)  # type: ignore[union-attr]
@@ -1161,12 +1171,15 @@ class HTTPResponse(BaseHTTPResponse):
             returned_chunk = value
         elif amt == self.chunk_left:
             value = self._fp._safe_read(amt)  # type: ignore[union-attr]
-            self._fp._safe_read(2)  # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
+            # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
+            self._fp._safe_read(2)
             self.chunk_left = None
             returned_chunk = value
         else:  # amt > self.chunk_left
-            returned_chunk = self._fp._safe_read(self.chunk_left)  # type: ignore[union-attr]
-            self._fp._safe_read(2)  # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
+            returned_chunk = self._fp._safe_read(
+                self.chunk_left)  # type: ignore[union-attr]
+            # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
+            self._fp._safe_read(2)
             self.chunk_left = None
         return returned_chunk  # type: ignore[no-any-return]
 
@@ -1187,7 +1200,8 @@ class HTTPResponse(BaseHTTPResponse):
             'content-encoding' header.
         """
         self._init_decoder()
-        # FIXME: Rewrite this method and make it a class with a better structured logic.
+        # FIXME: Rewrite this method and make it a class with a better
+        # structured logic.
         if not self.chunked:
             raise ResponseNotChunked(
                 "Response is not chunked. "
@@ -1201,7 +1215,8 @@ class HTTPResponse(BaseHTTPResponse):
 
         with self._error_catcher():
             # Don't bother reading the body of a HEAD request.
-            if self._original_response and is_response_to_head(self._original_response):
+            if self._original_response and is_response_to_head(
+                    self._original_response):
                 self._original_response.close()
                 return None
 
