@@ -1,8 +1,10 @@
 import unittest
 import json
 import requests
+import os  # ✅ This is what was missing
 from unittest.mock import patch, MagicMock
 from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
+
 
 class TestLambdaFunction(unittest.TestCase):
 
@@ -22,7 +24,7 @@ class TestLambdaFunction(unittest.TestCase):
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
     def test_lambda_returns_success_for_city(self, mock_requests_get):
         mock_response = MagicMock()
-        mock_response.raise_for_status = MagicMock(return_value=None)  # ✅ Ensure no exception
+        mock_response.raise_for_status.return_value = None  # Simulates successful status
         mock_response.json.return_value = {
             "main": {"temp": 20},
             "weather": [{"main": "Cloudy"}],
@@ -42,7 +44,7 @@ class TestLambdaFunction(unittest.TestCase):
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     def test_lambda_returns_500_missing_api_key(self, mock_requests_get):
         event = {"queryStringParameters": {"location": "London"}}
-        with patch.dict('os.environ', {}, clear=True):  # ✅ Clear env vars
+        with patch.dict('os.environ', {}, clear=True):  # Simulate no API key set
             result = lambda_handler(event, None)
 
         self.assertEqual(result["statusCode"], 500)
@@ -53,14 +55,15 @@ class TestLambdaFunction(unittest.TestCase):
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
     def test_lambda_handles_weather_api_failure(self, mock_requests_get):
-        mock_requests_get.side_effect = requests.exceptions.RequestException("Simulated crash")
+        mock_requests_get.side_effect = requests.exceptions.RequestException("simulated error")
 
         event = {"queryStringParameters": {"location": "Paris"}}
         result = lambda_handler(event, None)
 
-        self.assertEqual(result["statusCode"], 502)  # ✅ Ensure this matches your exception block
+        self.assertEqual(result["statusCode"], 502)
         body = json.loads(result["body"])
         self.assertIn("Weather service error", body["error"])
+
 
 if __name__ == '__main__':
     unittest.main()
