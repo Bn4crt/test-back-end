@@ -34,7 +34,7 @@ jobs:
       run: |
         python -m unittest discover -s tests -v
 
-    - name: 📁 Zip, Upload to S3 & Deploy Lambdas
+    - name: 📁 Zip, Upload to S3 & Deploy Lambdas (with shared common/)
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -47,32 +47,32 @@ jobs:
         for fn in lambda_functions/*; do
           name=$(basename "$fn")
 
-          # 🚫 Skip non-deployable dirs
-          if [[ "$name" == "dev-notes" || ! -d "$fn" ]]; then
+          # ⏭️ Skip folders not representing actual Lambda functions
+          if [[ "$name" == "common" || "$name" == "dev-notes" || "$name" == "__pycache__" || ! -d "$fn" ]]; then
             echo "⏭️ Skipping $name"
             continue
           fi
 
-          # 📦 Ensure .py files exist
-          py_files=($fn/*.py)
-          if [ ! -f "${py_files[0]}" ]; then
-            echo "⚠️ No .py files in $name – skipping"
+          # ⚠️ Skip if no Python files
+          if ! ls "$fn"/*.py >/dev/null 2>&1; then
+            echo "⚠️ No .py files found in $name – skipping"
             continue
           fi
 
-          zip -r "${name}.zip" "$fn"
+          echo "📦 Zipping $name with common/"
+          zip -r "${name}.zip" "$fn" lambda_functions/common
 
-          # ☁️ Upload to S3 for traceability
+          echo "☁️ Uploading $name.zip to S3..."
           aws s3 cp "${name}.zip" "s3://$S3_ARTIFACT_BUCKET/lambdas/${name}-${COMMIT}.zip" \
             --region "$AWS_REGION"
 
-          # 🚀 Deploy to Lambda
+          echo "🚀 Deploying to Lambda: $name"
           aws lambda update-function-code \
             --function-name "$name" \
             --zip-file fileb://"${name}.zip" \
             --region "$AWS_REGION" || echo "❌ Failed to update $name"
 
-          # 🕐 Wait for update to complete
+          echo "🕐 Waiting for update to complete: $name"
           aws lambda wait function-updated \
             --function-name "$name" \
             --region "$AWS_REGION"
@@ -111,4 +111,4 @@ jobs:
           --message "❌ Lambda backend deployment FAILED ❗
           Branch: $BRANCH
           Commit: $COMMIT
-          Check logs for details."          
+          Check logs for details."
