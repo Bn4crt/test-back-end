@@ -1,4 +1,4 @@
-name: 🧪 Test + Deploy Lambda Functions
+name: 🧪 Test + Deploy Lambda Functions!
 
 on:
   push:
