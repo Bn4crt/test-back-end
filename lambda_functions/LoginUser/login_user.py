@@ -3,6 +3,7 @@ import boto3
 import bcrypt
 from lambda_functions.common.logger import log_to_s3
 
+
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('RegisteredUsers')
 
