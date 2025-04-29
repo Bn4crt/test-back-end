@@ -4,7 +4,8 @@ import requests
 from unittest.mock import patch, MagicMock
 from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
 
-@patch('logger.log_to_s3')
+
+@patch('logger.log_to_s3')  # ✅ Patch once at the class level
 class TestLambdaFunction(unittest.TestCase):
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
@@ -39,7 +40,6 @@ class TestLambdaFunction(unittest.TestCase):
         self.assertEqual(body["error"], "No location or coordinates provided")
         mock_requests_get.assert_not_called()
 
-    @patch('logger.log_to_s3')  # ✅ patch log_to_s3 properly inside here
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     def test_lambda_returns_500_missing_api_key(self, mock_requests_get, mock_log):
         event = {"queryStringParameters": {"location": "London"}}
