@@ -64,19 +64,6 @@ jobs:
             --region "$AWS_REGION" || echo "❌ Failed: $name"
         done
 
-    - name: 🚀 Notify via SNS (optional)
-      if: success()
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
-      run: |
-        aws sns publish \
-          --topic-arn "$SNS_TOPIC_ARN" \
-          --region "$AWS_REGION" \
-          --message "✅ Lambda backend deployed successfully via GitHub Actions."
-
     - name: 📢 Notify via SNS – ✅ Success
       if: success()
       env:
