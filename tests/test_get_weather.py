@@ -4,7 +4,6 @@ import requests
 from unittest.mock import patch, MagicMock
 from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
 
-
 @patch('logger.log_to_s3')  # ✅ Mock AWS logging globally
 class TestLambdaFunction(unittest.TestCase):
 
@@ -41,8 +40,7 @@ class TestLambdaFunction(unittest.TestCase):
         mock_requests_get.assert_not_called()
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
-    @patch('logger.log_to_s3')  # ✅ Patch here too
-    def test_lambda_returns_500_missing_api_key(self, mock_log, mock_requests_get):
+    def test_lambda_returns_500_missing_api_key(self, mock_requests_get, mock_log):
         event = {"queryStringParameters": {"location": "London"}}
         with patch.dict('os.environ', {}, clear=True):
             result = lambda_handler(event, None)
