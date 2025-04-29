@@ -1,6 +1,6 @@
 import unittest
 import json
-import requests  # <-- Required for RequestException
+import requests
 from unittest.mock import patch, MagicMock
 from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
 
@@ -22,19 +22,19 @@ class TestLambdaFunction(unittest.TestCase):
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
     def test_lambda_returns_success_for_city(self, mock_requests_get):
         mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock(return_value=None)  # ✅ Ensure no exception
         mock_response.json.return_value = {
             "main": {"temp": 20},
             "weather": [{"main": "Cloudy"}],
             "name": "London"
         }
-        mock_response.raise_for_status = MagicMock()
         mock_requests_get.return_value = mock_response
 
         event = {"queryStringParameters": {"location": "London"}}
         result = lambda_handler(event, None)
 
         self.assertEqual(result["statusCode"], 200)
-        body = json.loads(result["body"])  # ✅ Correct JSON parsing
+        body = json.loads(result["body"])
         self.assertEqual(body["location"], "London")
         self.assertEqual(body["temperature"], 20)
         self.assertEqual(body["condition"], "Cloudy")
@@ -58,10 +58,9 @@ class TestLambdaFunction(unittest.TestCase):
         event = {"queryStringParameters": {"location": "Paris"}}
         result = lambda_handler(event, None)
 
-        self.assertEqual(result["statusCode"], 502)
+        self.assertEqual(result["statusCode"], 502)  # ✅ Ensure this matches your exception block
         body = json.loads(result["body"])
         self.assertIn("Weather service error", body["error"])
-
 
 if __name__ == '__main__':
     unittest.main()
