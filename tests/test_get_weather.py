@@ -4,12 +4,12 @@ import requests
 from unittest.mock import patch, MagicMock
 from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
 
-
+@patch('logger.log_to_s3')  # 👈 Apply once to all tests
 class TestLambdaFunction(unittest.TestCase):
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
-    def test_lambda_returns_success_for_city(self, mock_requests_get):
+    def test_lambda_returns_success_for_city(self, mock_requests_get, mock_log):
         mock_response = MagicMock()
         mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
@@ -30,7 +30,7 @@ class TestLambdaFunction(unittest.TestCase):
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
-    def test_lambda_returns_error_without_location(self, mock_requests_get):
+    def test_lambda_returns_error_without_location(self, mock_requests_get, mock_log):
         event = {"queryStringParameters": {}}
         result = lambda_handler(event, None)
 
@@ -40,7 +40,7 @@ class TestLambdaFunction(unittest.TestCase):
         mock_requests_get.assert_not_called()
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
-    def test_lambda_returns_500_missing_api_key(self, mock_requests_get):
+    def test_lambda_returns_500_missing_api_key(self, mock_requests_get, mock_log):
         event = {"queryStringParameters": {"location": "London"}}
         with patch.dict('os.environ', {}, clear=True):
             result = lambda_handler(event, None)
@@ -49,10 +49,11 @@ class TestLambdaFunction(unittest.TestCase):
         body = json.loads(result["body"])
         self.assertEqual(body["error"], "Missing WEATHER_API_KEY in environment")
         mock_requests_get.assert_not_called()
+        mock_log.assert_called_once()
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
-    def test_lambda_handles_weather_api_failure(self, mock_requests_get):
+    def test_lambda_handles_weather_api_failure(self, mock_requests_get, mock_log):
         mock_requests_get.side_effect = requests.exceptions.RequestException("simulated error")
 
         event = {"queryStringParameters": {"location": "Paris"}}
@@ -64,7 +65,7 @@ class TestLambdaFunction(unittest.TestCase):
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
-    def test_lambda_handles_timeout(self, mock_requests_get):
+    def test_lambda_handles_timeout(self, mock_requests_get, mock_log):
         mock_requests_get.side_effect = requests.exceptions.Timeout("simulated timeout")
 
         event = {"queryStringParameters": {"location": "Berlin"}}
