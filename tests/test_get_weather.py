@@ -1,5 +1,5 @@
 import unittest
-import GetWeatherByLocation as get_weather
+from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
 
 class TestLambdaFunction(unittest.TestCase):
     def test_lambda_returns_error_without_location(self):
