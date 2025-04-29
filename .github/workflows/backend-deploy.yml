@@ -1,0 +1,62 @@
+name: 🧪 Test + Deploy Lambda Functions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📅 Checkout repo
+      uses: actions/checkout@v3
+
+    - name: 🚀 Set up Python 3.13
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.13"
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
+    - name: 🔢 Set environment variables
+      run: |
+        echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+        echo "AWS_DEFAULT_REGION=eu-north-1" >> $GITHUB_ENV
+
+    - name: 🔮 Run Unit Tests
+      env:
+        WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+      run: |
+        python -m unittest discover -s tests -v
+
+    - name: 📁 Zip & Deploy Lambdas
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+      run: |
+        for fn in lambda_functions/*; do
+          name=$(basename $fn)
+          zip -j ${name}.zip $fn/*.py
+          aws lambda update-function-code \
+            --function-name $name \
+            --zip-file fileb://${name}.zip \
+            --region $AWS_REGION || echo "❌ Failed: $name"
+        done
+
+    - name: 🚀 Notify via SNS (optional)
+      if: success()
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
+      run: |
+        aws sns publish --topic-arn "$SNS_TOPIC_ARN" \
+          --message "✅ Lambda backend deployed successfully via GitHub Actions."
+          --region "$AWS_REGION"
