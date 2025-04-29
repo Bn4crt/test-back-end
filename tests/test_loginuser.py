@@ -1,3 +1,8 @@
+import unittest
+import json
+from unittest.mock import patch, MagicMock
+from lambda_functions.LoginUser.login_user import lambda_handler  # adjust path if needed
+
 @patch('lambda_functions.LoginUser.login_user.boto3.resource')
 def test_invalid_credentials(self, mock_dynamodb):
     # Simulate user not found
