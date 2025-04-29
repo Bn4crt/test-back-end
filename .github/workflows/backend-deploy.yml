@@ -22,13 +22,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
+          pip install coverage flake8 bandit  # ✅ New tools
 
       - name: 🔢 Set environment variables
         run: |
           echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
           echo "AWS_DEFAULT_REGION=eu-north-1" >> $GITHUB_ENV
 
-      - name: 🔮 Run Unit Tests
+      - name: 📊 Check Test Coverage
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -36,7 +37,17 @@ jobs:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           LOG_BUCKET: ${{ secrets.S3_ARTIFACT_BUCKET }}
         run: |
-          python -m unittest discover -s tests -v
+          coverage run -m unittest discover -s tests -v
+          coverage report
+          coverage html || true  # optional
+
+      - name: 🧹 Lint code with flake8
+        run: |
+          flake8 lambda_functions/ --count --max-line-length=100 --statistics
+
+      - name: 🔐 Scan for vulnerabilities with Bandit
+        run: |
+          bandit -r lambda_functions/ -n 5
 
       - name: 📁 Zip, Upload to S3 & Deploy Lambdas
         env:
@@ -51,13 +62,11 @@ jobs:
           for fn in lambda_functions/*; do
             name=$(basename "$fn")
 
-            # ⏭️ Skip folders not representing actual Lambda functions
             if [[ "$name" == "common" || "$name" == "dev-notes" || "$name" == "__pycache__" || ! -d "$fn" ]]; then
               echo "⏭️ Skipping $name"
               continue
             fi
 
-            # ⚠️ Skip if no Python files
             if ! ls "$fn"/*.py >/dev/null 2>&1; then
               echo "⚠️ No .py files found in $name – skipping"
               continue
