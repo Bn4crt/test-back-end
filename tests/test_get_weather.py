@@ -1,8 +1,8 @@
 import unittest
 import json
+import requests  # <-- Required for RequestException
 from unittest.mock import patch, MagicMock
 from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
-
 
 class TestLambdaFunction(unittest.TestCase):
 
@@ -27,7 +27,6 @@ class TestLambdaFunction(unittest.TestCase):
             "weather": [{"main": "Cloudy"}],
             "name": "London"
         }
-        mock_response.status_code = 200
         mock_response.raise_for_status = MagicMock()
         mock_requests_get.return_value = mock_response
 
@@ -35,27 +34,25 @@ class TestLambdaFunction(unittest.TestCase):
         result = lambda_handler(event, None)
 
         self.assertEqual(result["statusCode"], 200)
-        body = json.loads(result["body"])
+        body = json.loads(result["body"])  # ✅ Correct JSON parsing
         self.assertEqual(body["location"], "London")
         self.assertEqual(body["temperature"], 20)
         self.assertEqual(body["condition"], "Cloudy")
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     def test_lambda_returns_500_missing_api_key(self, mock_requests_get):
-        # Force WEATHER_API_KEY to be missing
-        with patch.dict('os.environ', {}, clear=True):
-            event = {"queryStringParameters": {"location": "London"}}
+        event = {"queryStringParameters": {"location": "London"}}
+        with patch.dict('os.environ', {}, clear=True):  # ✅ Clear env vars
             result = lambda_handler(event, None)
 
-            self.assertEqual(result["statusCode"], 500)
-            body = json.loads(result["body"])
-            self.assertEqual(body["error"], "Missing WEATHER_API_KEY in environment")
-            mock_requests_get.assert_not_called()
+        self.assertEqual(result["statusCode"], 500)
+        body = json.loads(result["body"])
+        self.assertEqual(body["error"], "Missing WEATHER_API_KEY in environment")
+        mock_requests_get.assert_not_called()
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
     @patch.dict('os.environ', {'WEATHER_API_KEY': 'dummy-key'})
     def test_lambda_handles_weather_api_failure(self, mock_requests_get):
-        # Simulate requests exception (will hit the 502 branch)
         mock_requests_get.side_effect = requests.exceptions.RequestException("Simulated crash")
 
         event = {"queryStringParameters": {"location": "Paris"}}
