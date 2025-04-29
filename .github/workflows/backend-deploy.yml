@@ -43,7 +43,14 @@ jobs:
 
       - name: 🧹 Lint code with flake8
         run: |
-          flake8 lambda_functions/ --count --max-line-length=100 --statistics
+          flake8 lambda_functions/GetUserPreferences/ \
+                 lambda_functions/RegisterUser/ \
+                 lambda_functions/UpdateUserPreferences/ \
+                 lambda_functions/GetWeatherByLocation/ \
+                 lambda_functions/LoginUser/ \
+                 logger.py \
+                 --count --max-line-length=100 --statistics
+
 
       - name: 🔐 Scan for vulnerabilities with Bandit
         run: |
