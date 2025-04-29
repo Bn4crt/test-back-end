@@ -34,34 +34,48 @@ jobs:
       run: |
         python -m unittest discover -s tests -v
 
-    - name: 📁 Zip & Deploy Lambdas
+    - name: 📁 Zip, Upload to S3 & Deploy Lambdas
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ secrets.AWS_REGION }}
+        S3_ARTIFACT_BUCKET: ${{ secrets.S3_ARTIFACT_BUCKET }}
       run: |
+        COMMIT=$(git rev-parse --short HEAD)
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
         for fn in lambda_functions/*; do
           name=$(basename "$fn")
 
-          # 🚫 Skip dev-notes or non-directory entries
+          # 🚫 Skip non-deployable dirs
           if [[ "$name" == "dev-notes" || ! -d "$fn" ]]; then
             echo "⏭️ Skipping $name"
             continue
           fi
 
-          # 📦 Check if .py files exist
+          # 📦 Ensure .py files exist
           py_files=($fn/*.py)
           if [ ! -f "${py_files[0]}" ]; then
             echo "⚠️ No .py files in $name – skipping"
             continue
           fi
 
-          zip -j "${name}.zip" "$fn"/*.py
+          zip -r "${name}.zip" "$fn"
 
+          # ☁️ Upload to S3 for traceability
+          aws s3 cp "${name}.zip" "s3://$S3_ARTIFACT_BUCKET/lambdas/${name}-${COMMIT}.zip" \
+            --region "$AWS_REGION"
+
+          # 🚀 Deploy to Lambda
           aws lambda update-function-code \
             --function-name "$name" \
             --zip-file fileb://"${name}.zip" \
-            --region "$AWS_REGION" || echo "❌ Failed: $name"
+            --region "$AWS_REGION" || echo "❌ Failed to update $name"
+
+          # 🕐 Wait for update to complete
+          aws lambda wait function-updated \
+            --function-name "$name" \
+            --region "$AWS_REGION"
         done
 
     - name: 📢 Notify via SNS – ✅ Success
@@ -72,10 +86,14 @@ jobs:
         AWS_REGION: ${{ secrets.AWS_REGION }}
         SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
       run: |
+        COMMIT=$(git rev-parse --short HEAD)
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
         aws sns publish \
           --topic-arn "$SNS_TOPIC_ARN" \
           --region "$AWS_REGION" \
-          --message "✅ Lambda backend deployed successfully via GitHub Actions."
+          --message "✅ Lambda backend deployed successfully 🚀
+          Branch: $BRANCH
+          Commit: $COMMIT"
 
     - name: 📢 Notify via SNS – ❌ Failure
       if: failure()
@@ -85,7 +103,12 @@ jobs:
         AWS_REGION: ${{ secrets.AWS_REGION }}
         SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
       run: |
+        COMMIT=$(git rev-parse --short HEAD)
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
         aws sns publish \
           --topic-arn "$SNS_TOPIC_ARN" \
           --region "$AWS_REGION" \
-          --message "❌ Lambda deployment failed in GitHub Actions. Please check the logs."
+          --message "❌ Lambda backend deployment FAILED ❗
+          Branch: $BRANCH
+          Commit: $COMMIT
+          Check logs for details."          
