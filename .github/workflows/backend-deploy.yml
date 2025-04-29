@@ -41,12 +41,27 @@ jobs:
         AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
         for fn in lambda_functions/*; do
-          name=$(basename $fn)
-          zip -j ${name}.zip $fn/*.py
+          name=$(basename "$fn")
+
+          # 🚫 Skip dev-notes or non-directory entries
+          if [[ "$name" == "dev-notes" || ! -d "$fn" ]]; then
+            echo "⏭️ Skipping $name"
+            continue
+          fi
+
+          # 📦 Check if .py files exist
+          py_files=($fn/*.py)
+          if [ ! -f "${py_files[0]}" ]; then
+            echo "⚠️ No .py files in $name – skipping"
+            continue
+          fi
+
+          zip -j "${name}.zip" "$fn"/*.py
+
           aws lambda update-function-code \
-            --function-name $name \
-            --zip-file fileb://${name}.zip \
-            --region $AWS_REGION || echo "❌ Failed: $name"
+            --function-name "$name" \
+            --zip-file fileb://"${name}.zip" \
+            --region "$AWS_REGION" || echo "❌ Failed: $name"
         done
 
     - name: 🚀 Notify via SNS (optional)
@@ -57,6 +72,33 @@ jobs:
         AWS_REGION: ${{ secrets.AWS_REGION }}
         SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
       run: |
-        aws sns publish --topic-arn "$SNS_TOPIC_ARN" \
+        aws sns publish \
+          --topic-arn "$SNS_TOPIC_ARN" \
+          --region "$AWS_REGION" \
           --message "✅ Lambda backend deployed successfully via GitHub Actions."
-          --region "$AWS_REGION"
+
+    - name: 📢 Notify via SNS – ✅ Success
+      if: success()
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
+      run: |
+        aws sns publish \
+          --topic-arn "$SNS_TOPIC_ARN" \
+          --region "$AWS_REGION" \
+          --message "✅ Lambda backend deployed successfully via GitHub Actions."
+
+    - name: 📢 Notify via SNS – ❌ Failure
+      if: failure()
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
+      run: |
+        aws sns publish \
+          --topic-arn "$SNS_TOPIC_ARN" \
+          --region "$AWS_REGION" \
+          --message "❌ Lambda deployment failed in GitHub Actions. Please check the logs."
