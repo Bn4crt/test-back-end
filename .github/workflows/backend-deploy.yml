@@ -39,7 +39,7 @@ jobs:
         run: |
           coverage run -m unittest discover -s tests -v
           coverage report
-          coverage html || true  # Optional, generates HTML report
+          coverage html || true  # Optional
 
       - name: 🧹 Lint Code (Non-blocking)
         run: |
@@ -72,8 +72,8 @@ jobs:
               continue
             fi
 
-            echo "📦 Zipping $name"
-            zip -r "${name}.zip" "$fn" logger.py
+            echo "📦 Zipping $name (flattened)"
+            zip -j "${name}.zip" "$fn"/*.py logger.py
 
             echo "☁️ Uploading $name.zip to S3..."
             aws s3 cp "${name}.zip" "s3://$S3_ARTIFACT_BUCKET/lambdas/${name}-${COMMIT}.zip" \
