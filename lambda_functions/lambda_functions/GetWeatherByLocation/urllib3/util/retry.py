@@ -296,15 +296,13 @@ class Retry:
         # redirects).
         consecutive_errors_len = len(
             list(
-                takewhile(
-                    lambda x: x.redirect_location is None,
-                    reversed(
-                        self.history))))
+                takewhile(lambda x: x.redirect_location is None, reversed(self.history))
+            )
+        )
         if consecutive_errors_len <= 1:
             return 0
 
-        backoff_value = self.backoff_factor * \
-            (2 ** (consecutive_errors_len - 1))
+        backoff_value = self.backoff_factor * (2 ** (consecutive_errors_len - 1))
         if self.backoff_jitter != 0.0:
             backoff_value += random.random() * self.backoff_jitter
         return float(max(0, min(self.backoff_max, backoff_value)))
@@ -317,8 +315,7 @@ class Retry:
         else:
             retry_date_tuple = email.utils.parsedate_tz(retry_after)
             if retry_date_tuple is None:
-                raise InvalidHeader(
-                    f"Invalid Retry-After header: {retry_after}")
+                raise InvalidHeader(f"Invalid Retry-After header: {retry_after}")
 
             retry_date = email.utils.mktime_tz(retry_date_tuple)
             seconds = retry_date - time.time()
@@ -475,8 +472,7 @@ class Retry:
 
         elif error and self._is_read_error(error):
             # Read retry?
-            if read is False or method is None or not self._is_method_retryable(
-                    method):
+            if read is False or method is None or not self._is_method_retryable(method):
                 raise reraise(type(error), error, _stacktrace)
             elif read is not None:
                 read -= 1
@@ -503,8 +499,7 @@ class Retry:
             if response and response.status:
                 if status_count is not None:
                     status_count -= 1
-                cause = ResponseError.SPECIFIC_ERROR.format(
-                    status_code=response.status)
+                cause = ResponseError.SPECIFIC_ERROR.format(status_code=response.status)
                 status = response.status
 
         history = self.history + (
@@ -535,10 +530,12 @@ class Retry:
             f"{
                 type(self).__name__}(total={
                 self.total}, connect={
-                self.connect}, " f"read={
+                self.connect}, "
+            f"read={
                     self.read}, redirect={
                         self.redirect}, status={
-                            self.status})")
+                            self.status})"
+        )
 
 
 # For backwards compatibility (equivalent to pre-v1.9):

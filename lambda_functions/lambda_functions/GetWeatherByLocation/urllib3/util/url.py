@@ -249,15 +249,14 @@ def _encode_invalid_chars(
 
     for i in range(0, len(uri_bytes)):
         # Will return a single character bytestring
-        byte = uri_bytes[i: i + 1]
+        byte = uri_bytes[i : i + 1]
         byte_ord = ord(byte)
         if (is_percent_encoded and byte == b"%") or (
             byte_ord < 128 and byte.decode() in allowed_chars
         ):
             encoded_component += byte
             continue
-        encoded_component.extend(
-            b"%" + (hex(byte_ord)[2:].encode().zfill(2).upper()))
+        encoded_component.extend(b"%" + (hex(byte_ord)[2:].encode().zfill(2).upper()))
 
     return encoded_component.decode()
 
@@ -414,7 +413,8 @@ def parse_url(url: str) -> Url:
 
     try:
         scheme, authority, path, query, fragment = _URI_RE.match(
-            url).groups()  # type: ignore[union-attr]
+            url
+        ).groups()  # type: ignore[union-attr]
         normalize_uri = scheme is None or scheme.lower() in _NORMALIZABLE_SCHEMES
 
         if scheme:
@@ -424,7 +424,8 @@ def parse_url(url: str) -> Url:
             auth, _, host_port = authority.rpartition("@")
             auth = auth or None
             host, port = _HOST_PORT_RE.match(
-                host_port).groups()  # type: ignore[union-attr]
+                host_port
+            ).groups()  # type: ignore[union-attr]
             if auth and normalize_uri:
                 auth = _encode_invalid_chars(auth, _USERINFO_CHARS)
             if port == "":

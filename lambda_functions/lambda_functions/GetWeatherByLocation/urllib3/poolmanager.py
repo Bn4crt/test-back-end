@@ -156,9 +156,7 @@ key_fn_by_scheme = {
     "https": functools.partial(_default_key_normalizer, PoolKey),
 }
 
-pool_classes_by_scheme = {
-    "http": HTTPConnectionPool,
-    "https": HTTPSConnectionPool}
+pool_classes_by_scheme = {"http": HTTPConnectionPool, "https": HTTPSConnectionPool}
 
 
 class PoolManager(RequestMethods):
@@ -327,8 +325,7 @@ class PoolManager(RequestMethods):
             raise URLSchemeUnknown(scheme)
         pool_key = pool_key_constructor(request_context)
 
-        return self.connection_from_pool_key(
-            pool_key, request_context=request_context)
+        return self.connection_from_pool_key(pool_key, request_context=request_context)
 
     def connection_from_pool_key(
         self, pool_key: PoolKey, request_context: dict[str, typing.Any]
@@ -351,8 +348,7 @@ class PoolManager(RequestMethods):
             scheme = request_context["scheme"]
             host = request_context["host"]
             port = request_context["port"]
-            pool = self._new_pool(
-                scheme, host, port, request_context=request_context)
+            pool = self._new_pool(scheme, host, port, request_context=request_context)
             self.pools[pool_key] = pool
 
         return pool
@@ -458,8 +454,7 @@ class PoolManager(RequestMethods):
             method = "GET"
             # And lose the body not to transfer anything sensitive.
             kw["body"] = None
-            kw["headers"] = HTTPHeaderDict(
-                kw["headers"])._prepare_for_method_change()
+            kw["headers"] = HTTPHeaderDict(kw["headers"])._prepare_for_method_change()
 
         retries = kw.get("retries")
         if not isinstance(retries, Retry):
@@ -479,8 +474,7 @@ class PoolManager(RequestMethods):
             kw["headers"] = new_headers
 
         try:
-            retries = retries.increment(
-                method, url, response=response, _pool=conn)
+            retries = retries.increment(method, url, response=response, _pool=conn)
         except MaxRetryError:
             if retries.raise_on_redirect:
                 response.drain_conn()
@@ -609,7 +603,10 @@ class ProxyManager(PoolManager):
 
         return super().connection_from_host(
             # type: ignore[union-attr]
-            self.proxy.host, self.proxy.port, self.proxy.scheme, pool_kwargs=pool_kwargs
+            self.proxy.host,
+            self.proxy.port,
+            self.proxy.scheme,
+            pool_kwargs=pool_kwargs,
         )
 
     def _set_proxy_headers(
@@ -634,8 +631,7 @@ class ProxyManager(PoolManager):
     ) -> BaseHTTPResponse:
         "Same as HTTP(S)ConnectionPool.urlopen, ``url`` must be absolute."
         u = parse_url(url)
-        if not connection_requires_http_tunnel(
-                self.proxy, self.proxy_config, u.scheme):
+        if not connection_requires_http_tunnel(self.proxy, self.proxy_config, u.scheme):
             # For connections using HTTP CONNECT, httplib sets the necessary
             # headers on the CONNECT to the proxy. If we're not using CONNECT,
             # we'll definitely need to set 'Host' at the very least.

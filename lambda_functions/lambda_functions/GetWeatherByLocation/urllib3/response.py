@@ -477,7 +477,8 @@ class BaseHTTPResponse(io.IOBase):
             if self._has_decoded_content:
                 raise RuntimeError(
                     "Calling read(decode_content=False) is not supported after "
-                    "read(decode_content=True) was called.")
+                    "read(decode_content=True) was called."
+                )
             return data
 
         try:
@@ -733,9 +734,7 @@ class HTTPResponse(BaseHTTPResponse):
             status = 0
 
         # Check for responses that shouldn't include a body
-        if status in (
-                204,
-                304) or 100 <= status < 200 or request_method == "HEAD":
+        if status in (204, 304) or 100 <= status < 200 or request_method == "HEAD":
             length = 0
 
         return length
@@ -759,7 +758,8 @@ class HTTPResponse(BaseHTTPResponse):
                 # FIXME: Ideally we'd like to include the url in the ReadTimeoutError but
                 # there is yet no clean way to get at it from this context.
                 raise ReadTimeoutError(
-                    self._pool, None, "Read timed out.") from e  # type: ignore[arg-type]
+                    self._pool, None, "Read timed out."
+                ) from e  # type: ignore[arg-type]
 
             except BaseSSLError as e:
                 # FIXME: Is there a better way to differentiate between
@@ -770,7 +770,8 @@ class HTTPResponse(BaseHTTPResponse):
                     raise SSLError(e) from e
 
                 raise ReadTimeoutError(
-                    self._pool, None, "Read timed out.") from e  # type: ignore[arg-type]
+                    self._pool, None, "Read timed out."
+                ) from e  # type: ignore[arg-type]
 
             except IncompleteRead as e:
                 if (
@@ -903,8 +904,7 @@ class HTTPResponse(BaseHTTPResponse):
                     # addressing it here to make sure IncompleteRead is
                     # raised during streaming, so all calls with incorrect
                     # Content-Length are caught.
-                    raise IncompleteRead(
-                        self._fp_bytes_read, self.length_remaining)
+                    raise IncompleteRead(self._fp_bytes_read, self.length_remaining)
             elif read1 and (
                 (amt != 0 and not data) or self.length_remaining == len(data)
             ):
@@ -976,7 +976,8 @@ class HTTPResponse(BaseHTTPResponse):
                 if self._has_decoded_content:
                     raise RuntimeError(
                         "Calling read(decode_content=False) is not supported after "
-                        "read(decode_content=True) was called.")
+                        "read(decode_content=True) was called."
+                    )
                 return data
 
             decoded_data = self._decode(data, decode_content, flush_decoder)
@@ -987,8 +988,7 @@ class HTTPResponse(BaseHTTPResponse):
                 # For example, the GZ file header takes 10 bytes, we don't want to read
                 # it one byte at a time
                 data = self._raw_read(amt)
-                decoded_data = self._decode(
-                    data, decode_content, flush_decoder)
+                decoded_data = self._decode(data, decode_content, flush_decoder)
                 self._decoded_buffer.put(decoded_data)
             data = self._decoded_buffer.get(amt)
 
@@ -1021,7 +1021,8 @@ class HTTPResponse(BaseHTTPResponse):
             if not decode_content:
                 raise RuntimeError(
                     "Calling read1(decode_content=False) is not supported after "
-                    "read1(decode_content=True) was called.")
+                    "read1(decode_content=True) was called."
+                )
             if len(self._decoded_buffer) > 0:
                 if amt is None:
                     return self._decoded_buffer.get_all()
@@ -1080,8 +1081,7 @@ class HTTPResponse(BaseHTTPResponse):
 
     def shutdown(self) -> None:
         if not self._sock_shutdown:
-            raise ValueError(
-                "Cannot shutdown socket as self._sock_shutdown is not set")
+            raise ValueError("Cannot shutdown socket as self._sock_shutdown is not set")
         self._sock_shutdown(socket.SHUT_RD)
 
     def close(self) -> None:
@@ -1159,8 +1159,7 @@ class HTTPResponse(BaseHTTPResponse):
     def _handle_chunk(self, amt: int | None) -> bytes:
         returned_chunk = None
         if amt is None:
-            chunk = self._fp._safe_read(
-                self.chunk_left)  # type: ignore[union-attr]
+            chunk = self._fp._safe_read(self.chunk_left)  # type: ignore[union-attr]
             returned_chunk = chunk
             # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
             self._fp._safe_read(2)
@@ -1177,7 +1176,8 @@ class HTTPResponse(BaseHTTPResponse):
             returned_chunk = value
         else:  # amt > self.chunk_left
             returned_chunk = self._fp._safe_read(
-                self.chunk_left)  # type: ignore[union-attr]
+                self.chunk_left
+            )  # type: ignore[union-attr]
             # type: ignore[union-attr] # Toss the CRLF at the end of the chunk.
             self._fp._safe_read(2)
             self.chunk_left = None
@@ -1215,8 +1215,7 @@ class HTTPResponse(BaseHTTPResponse):
 
         with self._error_catcher():
             # Don't bother reading the body of a HEAD request.
-            if self._original_response and is_response_to_head(
-                    self._original_response):
+            if self._original_response and is_response_to_head(self._original_response):
                 self._original_response.close()
                 return None
 

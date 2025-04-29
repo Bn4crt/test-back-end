@@ -181,8 +181,7 @@ class SuspiciousDuplicateAccentPlugin(MessDetectorPlugin):
             if character.isupper() and self._last_latin_character.isupper():
                 self._successive_count += 1
             # Worse if its the same char duplicated with different accent.
-            if remove_accent(character) == remove_accent(
-                    self._last_latin_character):
+            if remove_accent(character) == remove_accent(self._last_latin_character):
                 self._successive_count += 1
         self._last_latin_character = character
 
@@ -293,8 +292,9 @@ class SuperWeirdWordPlugin(MessDetectorPlugin):
             return
         if not self._buffer:
             return
-        if (character.isspace() or is_punctuation(character)
-                or is_separator(character)) and self._buffer:
+        if (
+            character.isspace() or is_punctuation(character) or is_separator(character)
+        ) and self._buffer:
             self._word_count += 1
             buffer_length: int = len(self._buffer)
 
@@ -324,8 +324,7 @@ class SuperWeirdWordPlugin(MessDetectorPlugin):
                 ]
                 probable_camel_cased: bool = False
 
-                if camel_case_dst and (
-                        len(camel_case_dst) / buffer_length <= 0.3):
+                if camel_case_dst and (len(camel_case_dst) / buffer_length <= 0.3):
                     probable_camel_cased = True
 
                 if not probable_camel_cased:

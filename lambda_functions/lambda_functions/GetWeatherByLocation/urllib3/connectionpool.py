@@ -459,8 +459,7 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
 
         timeout_obj = self._get_timeout(timeout)
         timeout_obj.start_connect()
-        conn.timeout = Timeout.resolve_default_timeout(
-            timeout_obj.connect_timeout)
+        conn.timeout = Timeout.resolve_default_timeout(timeout_obj.connect_timeout)
 
         try:
             # Trigger any extra validation we need to do.
@@ -714,8 +713,7 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
             headers = self.headers
 
         if not isinstance(retries, Retry):
-            retries = Retry.from_int(
-                retries, redirect=redirect, default=self.retries)
+            retries = Retry.from_int(retries, redirect=redirect, default=self.retries)
 
         if release_conn is None:
             release_conn = preload_content
@@ -846,11 +844,8 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
                 new_e = ProtocolError("Connection aborted.", new_e)
 
             retries = retries.increment(
-                method,
-                url,
-                error=new_e,
-                _pool=self,
-                _stacktrace=sys.exc_info()[2])
+                method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+            )
             retries.sleep()
 
             # Keep track of the error for the retry warning.
@@ -876,10 +871,8 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
         if not conn:
             # Try again
             log.warning(
-                "Retrying (%r) after connection broken by '%r': %s",
-                retries,
-                err,
-                url)
+                "Retrying (%r) after connection broken by '%r': %s", retries, err, url
+            )
             return self.urlopen(
                 method,
                 url,
@@ -909,8 +902,7 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
                 headers = HTTPHeaderDict(headers)._prepare_for_method_change()
 
             try:
-                retries = retries.increment(
-                    method, url, response=response, _pool=self)
+                retries = retries.increment(method, url, response=response, _pool=self)
             except MaxRetryError:
                 if retries.raise_on_redirect:
                     response.drain_conn()
@@ -942,8 +934,7 @@ class HTTPConnectionPool(ConnectionPool, RequestMethods):
         has_retry_after = bool(response.headers.get("Retry-After"))
         if retries.is_retry(method, response.status, has_retry_after):
             try:
-                retries = retries.increment(
-                    method, url, response=response, _pool=self)
+                retries = retries.increment(method, url, response=response, _pool=self)
             except MaxRetryError:
                 if retries.raise_on_status:
                     response.drain_conn()
@@ -1111,10 +1102,15 @@ class HTTPSConnectionPool(HTTPConnectionPool):
         # TODO revise this, see https://github.com/urllib3/urllib3/issues/2791
         if not conn.is_verified and not conn.proxy_is_verified:
             warnings.warn(
-                (f"Unverified HTTPS request is being made to host '{
-                    conn.host}'. " "Adding certificate verification is strongly advised. See: "
+                (
+                    f"Unverified HTTPS request is being made to host '{
+                    conn.host}'. "
+                    "Adding certificate verification is strongly advised. See: "
                     "https://urllib3.readthedocs.io/en/latest/advanced-usage.html"
-                    "#tls-warnings"), InsecureRequestWarning, )
+                    "#tls-warnings"
+                ),
+                InsecureRequestWarning,
+            )
 
 
 def connection_from_url(url: str, **kw: typing.Any) -> HTTPConnectionPool:
@@ -1141,11 +1137,9 @@ def connection_from_url(url: str, **kw: typing.Any) -> HTTPConnectionPool:
     scheme = scheme or "http"
     port = port or port_by_scheme.get(scheme, 80)
     if scheme == "https":
-        return HTTPSConnectionPool(
-            host, port=port, **kw)  # type: ignore[arg-type]
+        return HTTPSConnectionPool(host, port=port, **kw)  # type: ignore[arg-type]
     else:
-        return HTTPConnectionPool(
-            host, port=port, **kw)  # type: ignore[arg-type]
+        return HTTPConnectionPool(host, port=port, **kw)  # type: ignore[arg-type]
 
 
 @typing.overload
@@ -1178,11 +1172,7 @@ def _url_from_pool(
     pool: HTTPConnectionPool | HTTPSConnectionPool, path: str | None = None
 ) -> str:
     """Returns the URL from a given connection pool. This is mainly used for testing and logging."""
-    return Url(
-        scheme=pool.scheme,
-        host=pool.host,
-        port=pool.port,
-        path=path).url
+    return Url(scheme=pool.scheme, host=pool.host, port=pool.port, path=path).url
 
 
 def _close_pool_connections(pool: queue.LifoQueue[typing.Any]) -> None:

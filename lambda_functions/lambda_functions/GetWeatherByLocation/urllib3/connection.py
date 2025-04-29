@@ -110,7 +110,8 @@ class HTTPConnection(_HTTPConnection):
     #: Disable Nagle's algorithm by default.
     #: ``[(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]``
     default_socket_options: typing.ClassVar[connection._TYPE_SOCKET_OPTIONS] = [
-        (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)]
+        (socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    ]
 
     #: Whether this connection verifies the host's certificate.
     is_verified: bool = False
@@ -205,9 +206,11 @@ class HTTPConnection(_HTTPConnection):
             raise NameResolutionError(self.host, self, e) from e
         except SocketTimeout as e:
             raise ConnectTimeoutError(
-                self, f"Connection to {
+                self,
+                f"Connection to {
                     self.host} timed out. (connect timeout={
-                    self.timeout})", ) from e
+                    self.timeout})",
+            ) from e
 
         except OSError as e:
             raise NewConnectionError(
@@ -228,7 +231,8 @@ class HTTPConnection(_HTTPConnection):
         if scheme not in ("http", "https"):
             raise ValueError(
                 f"Invalid proxy scheme for tunneling: {
-                    scheme!r}, must be either 'http' or 'https'")
+                    scheme!r}, must be either 'http' or 'https'"
+            )
         super().set_tunnel(host, port=port, headers=headers)
         self._tunnel_scheme = scheme
 
@@ -241,8 +245,10 @@ class HTTPConnection(_HTTPConnection):
                 self._tunnel_port,
             )
             headers = [connect]
-            for header, value in self._tunnel_headers.items(
-            ):  # type: ignore[attr-defined]
+            for (
+                header,
+                value,
+            ) in self._tunnel_headers.items():  # type: ignore[attr-defined]
                 headers.append(f"{header}: {value}\r\n".encode("latin-1"))
             headers.append(b"\r\n")
             # Making a single send() call instead of one per line encourages
@@ -252,7 +258,8 @@ class HTTPConnection(_HTTPConnection):
             del headers
 
             response = self.response_class(
-                self.sock, method=self._method)  # type: ignore[attr-defined]
+                self.sock, method=self._method
+            )  # type: ignore[attr-defined]
             try:
                 # type: ignore[attr-defined]
                 (version, code, message) = response._read_status()
@@ -261,7 +268,8 @@ class HTTPConnection(_HTTPConnection):
                     self.close()
                     raise OSError(
                         f"Tunnel connection failed: {code} {
-                            message.strip()}")
+                            message.strip()}"
+                    )
                 while True:
                     line = response.fp.readline(_MAXLINE + 1)
                     if len(line) > _MAXLINE:
@@ -352,10 +360,12 @@ class HTTPConnection(_HTTPConnection):
             raise ValueError(
                 f"Method cannot contain non-token characters {
                     method!r} (found at least {
-                    match.group()!r})")
+                    match.group()!r})"
+            )
 
-        return super().putrequest(method, url, skip_host=skip_host,
-                                  skip_accept_encoding=skip_accept_encoding)
+        return super().putrequest(
+            method, url, skip_host=skip_host, skip_accept_encoding=skip_accept_encoding
+        )
 
     # type: ignore[override]
     def putheader(self, header: str, *values: str) -> None:
@@ -412,15 +422,12 @@ class HTTPConnection(_HTTPConnection):
         skip_accept_encoding = "accept-encoding" in header_keys
         skip_host = "host" in header_keys
         self.putrequest(
-            method,
-            url,
-            skip_accept_encoding=skip_accept_encoding,
-            skip_host=skip_host)
+            method, url, skip_accept_encoding=skip_accept_encoding, skip_host=skip_host
+        )
 
         # Transform the body into an iterable of sendall()-able chunks
         # and detect if an explicit Content-Length is doable.
-        chunks_and_cl = body_to_chunks(
-            body, method=method, blocksize=self.blocksize)
+        chunks_and_cl = body_to_chunks(body, method=method, blocksize=self.blocksize)
         chunks = chunks_and_cl.chunks
         content_length = chunks_and_cl.content_length
 
@@ -783,9 +790,8 @@ class HTTPSConnection(HTTPConnection):
 
             if target_supports_http2 is None:
                 http2_probe.set_and_release(
-                    host=probe_http2_host,
-                    port=probe_http2_port,
-                    supports_http2=None)
+                    host=probe_http2_host, port=probe_http2_port, supports_http2=None
+                )
             raise
 
         # If this connection doesn't know if the origin supports HTTP/2
@@ -817,10 +823,7 @@ class HTTPSConnection(HTTPConnection):
         if self._has_connected_to_proxy and self.proxy_is_verified is None:
             self.proxy_is_verified = sock_and_verified.is_verified
 
-    def _connect_tls_proxy(
-            self,
-            hostname: str,
-            sock: socket.socket) -> ssl.SSLSocket:
+    def _connect_tls_proxy(self, hostname: str, sock: socket.socket) -> ssl.SSLSocket:
         """
         Establish a TLS connection to the proxy using the provided SSL context.
         """
@@ -968,10 +971,8 @@ def _ssl_wrap_socket_and_match_hostname(
                 hostname_checks_common_name = False
             else:
                 hostname_checks_common_name = (
-                    getattr(
-                        context,
-                        "hostname_checks_common_name",
-                        False) or False)
+                    getattr(context, "hostname_checks_common_name", False) or False
+                )
 
             _match_hostname(
                 cert,
@@ -1032,7 +1033,8 @@ def _wrap_proxy_error(err: Exception, proxy_scheme: str | None) -> ProxyError:
         "#https-proxy-error-http-proxy"
     )
     new_err = ProxyError(
-        f"Unable to connect to proxy" f"{
+        f"Unable to connect to proxy"
+        f"{
             http_proxy_warning if is_likely_http_proxy and proxy_scheme == 'https' else ''}",
         err,
     )

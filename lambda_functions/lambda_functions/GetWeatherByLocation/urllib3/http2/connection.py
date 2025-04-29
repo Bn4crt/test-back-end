@@ -23,8 +23,7 @@ T = typing.TypeVar("T")
 log = logging.getLogger(__name__)
 
 RE_IS_LEGAL_HEADER_NAME = re.compile(rb"^[!#$%&'*+\-.^_`|~0-9a-z]+$")
-RE_IS_ILLEGAL_HEADER_VALUE = re.compile(
-    rb"[\0\x00\x0a\x0d\r\n]|^[ \r\n\t]|[ \r\n\t]$")
+RE_IS_ILLEGAL_HEADER_VALUE = re.compile(rb"[\0\x00\x0a\x0d\r\n]|^[ \r\n\t]|[ \r\n\t]$")
 
 
 def _is_legal_header_name(name: bytes) -> bool:
@@ -206,8 +205,7 @@ class HTTP2Connection(HTTPSConnection):
                         self.sock.sendall(data_to_send)
                 else:
                     for chunk in data:
-                        conn.send_data(
-                            self._h2_stream, chunk, end_stream=False)
+                        conn.send_data(self._h2_stream, chunk, end_stream=False)
                         if data_to_send := conn.data_to_send():
                             self.sock.sendall(data_to_send)
                     conn.end_stream(self._h2_stream)
@@ -247,7 +245,8 @@ class HTTP2Connection(HTTPSConnection):
                                     status = int(value.decode())
                                 else:
                                     headers.add(
-                                        header.decode("ascii"), value.decode("ascii"))
+                                        header.decode("ascii"), value.decode("ascii")
+                                    )
 
                         elif isinstance(event, h2.events.DataReceived):
                             data += event.data

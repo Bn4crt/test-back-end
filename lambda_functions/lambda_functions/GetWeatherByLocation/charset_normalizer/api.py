@@ -75,13 +75,11 @@ def from_bytes(
     length: int = len(sequences)
 
     if length == 0:
-        logger.debug(
-            "Encoding detection on empty bytes, assuming utf_8 intention.")
+        logger.debug("Encoding detection on empty bytes, assuming utf_8 intention.")
         if explain:  # Defensive: ensure exit path clean handler
             logger.removeHandler(explain_handler)
             logger.setLevel(previous_logger_level or logging.WARNING)
-        return CharsetMatches(
-            [CharsetMatch(sequences, "utf_8", 0.0, False, [], "")])
+        return CharsetMatches([CharsetMatch(sequences, "utf_8", 0.0, False, [], "")])
 
     if cp_isolation is not None:
         logger.log(
@@ -194,7 +192,8 @@ def from_bytes(
         decoded_payload: str | None = None
         bom_or_sig_available: bool = sig_encoding == encoding_iana
         strip_sig_or_bom: bool = bom_or_sig_available and should_strip_sig_or_bom(
-            encoding_iana)
+            encoding_iana
+        )
 
         if encoding_iana in {"utf_16", "utf_32"} and not bom_or_sig_available:
             logger.log(
@@ -227,7 +226,7 @@ def from_bytes(
                     (
                         sequences[: int(50e4)]
                         if strip_sig_or_bom is False
-                        else sequences[len(sig_payload): int(50e4)]
+                        else sequences[len(sig_payload) : int(50e4)]
                     ),
                     encoding=encoding_iana,
                 )
@@ -236,7 +235,7 @@ def from_bytes(
                     (
                         sequences
                         if strip_sig_or_bom is False
-                        else sequences[len(sig_payload):]
+                        else sequences[len(sig_payload) :]
                     ),
                     encoding=encoding_iana,
                 )
@@ -345,7 +344,7 @@ def from_bytes(
             and not is_multi_byte_decoder
         ):
             try:
-                sequences[int(50e3):].decode(encoding_iana, errors="strict")
+                sequences[int(50e3) :].decode(encoding_iana, errors="strict")
             except UnicodeDecodeError as e:
                 logger.log(
                     TRACE,
@@ -356,8 +355,7 @@ def from_bytes(
                 tested_but_hard_failure.append(encoding_iana)
                 continue
 
-        mean_mess_ratio: float = sum(
-            md_ratios) / len(md_ratios) if md_ratios else 0.0
+        mean_mess_ratio: float = sum(md_ratios) / len(md_ratios) if md_ratios else 0.0
         if mean_mess_ratio >= threshold or early_stop_count >= max_chunk_gave_up:
             tested_but_soft_failure.append(encoding_iana)
             logger.log(
@@ -366,10 +364,7 @@ def from_bytes(
                 "Computed mean chaos is %f %%.",
                 encoding_iana,
                 early_stop_count,
-                round(
-                    mean_mess_ratio *
-                    100,
-                    ndigits=3),
+                round(mean_mess_ratio * 100, ndigits=3),
             )
             # Preparing those fallbacks in case we got nothing.
             if (
@@ -495,7 +490,9 @@ def from_bytes(
         if encoding_iana == sig_encoding:
             logger.debug(
                 "Encoding detection: %s is most likely the one as we detected a BOM or SIG within "
-                "the beginning of the sequence.", encoding_iana, )
+                "the beginning of the sequence.",
+                encoding_iana,
+            )
             if explain:  # Defensive: ensure exit path clean handler
                 logger.removeHandler(explain_handler)
                 logger.setLevel(previous_logger_level)
@@ -523,12 +520,10 @@ def from_bytes(
             )
             or (fallback_u8 is not None)
         ):
-            logger.debug(
-                "Encoding detection: utf_8 will be used as a fallback match")
+            logger.debug("Encoding detection: utf_8 will be used as a fallback match")
             results.append(fallback_u8)
         elif fallback_ascii:
-            logger.debug(
-                "Encoding detection: ascii will be used as a fallback match")
+            logger.debug("Encoding detection: ascii will be used as a fallback match")
             results.append(fallback_ascii)
 
     if results:
@@ -538,8 +533,7 @@ def from_bytes(
             len(results) - 1,
         )
     else:
-        logger.debug(
-            "Encoding detection: Unable to determine any suitable charset.")
+        logger.debug("Encoding detection: Unable to determine any suitable charset.")
 
     if explain:
         logger.removeHandler(explain_handler)

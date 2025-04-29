@@ -70,10 +70,9 @@ def _is_has_never_check_common_name_reliable(
     is_openssl_issue_14579_fixed = openssl_version_number >= 0x101010CF
 
     return is_openssl and (
-        is_openssl_issue_14579_fixed or _is_bpo_43522_fixed(
-            implementation_name,
-            version_info,
-            pypy_version_info))
+        is_openssl_issue_14579_fixed
+        or _is_bpo_43522_fixed(implementation_name, version_info, pypy_version_info)
+    )
 
 
 if typing.TYPE_CHECKING:
@@ -112,8 +111,7 @@ try:  # Do we have ssl at all?
     PROTOCOL_SSLv23 = PROTOCOL_TLS
 
     # Needed for Python 3.9 which does not define this
-    VERIFY_X509_PARTIAL_CHAIN = getattr(
-        ssl, "VERIFY_X509_PARTIAL_CHAIN", 0x80000)
+    VERIFY_X509_PARTIAL_CHAIN = getattr(ssl, "VERIFY_X509_PARTIAL_CHAIN", 0x80000)
 
     # Setting SSLContext.hostname_checks_common_name = False didn't work before CPython
     # 3.9.3, and 3.10 (but OK on PyPy) or OpenSSL 1.1.1l+
@@ -131,8 +129,9 @@ try:  # Do we have ssl at all?
     # removed in future 'ssl' module implementations.
     for attr in ("TLSv1", "TLSv1_1", "TLSv1_2"):
         try:
-            _SSL_VERSION_TO_TLS_VERSION[getattr(
-                ssl, f"PROTOCOL_{attr}")] = getattr(TLSVersion, attr)
+            _SSL_VERSION_TO_TLS_VERSION[getattr(ssl, f"PROTOCOL_{attr}")] = getattr(
+                TLSVersion, attr
+            )
         except AttributeError:  # Defensive:
             continue
 
@@ -171,7 +170,8 @@ def assert_fingerprint(cert: bytes | None, fingerprint: str) -> None:
     hashfunc = HASHFUNC_MAP.get(digest_length)
     if hashfunc is None:
         raise SSLError(
-            f"Hash function implementation unavailable for fingerprint length: {digest_length}")
+            f"Hash function implementation unavailable for fingerprint length: {digest_length}"
+        )
 
     # We need encode() here for py32; works on py2 and p33.
     fingerprint_bytes = unhexlify(fingerprint.encode())
@@ -181,7 +181,8 @@ def assert_fingerprint(cert: bytes | None, fingerprint: str) -> None:
     if not hmac.compare_digest(cert_digest, fingerprint_bytes):
         raise SSLError(
             f'Fingerprints did not match. Expected "{fingerprint}", got "{
-                cert_digest.hex()}"')
+                cert_digest.hex()}"'
+        )
 
 
 def resolve_cert_reqs(candidate: None | int | str) -> VerifyMode:
@@ -263,8 +264,7 @@ def create_urllib3_context(
     :rtype: SSLContext
     """
     if SSLContext is None:
-        raise TypeError(
-            "Can't create an SSLContext object without an ssl module")
+        raise TypeError("Can't create an SSLContext object without an ssl module")
 
     # This means 'ssl_version' was specified as an exact value.
     if ssl_version not in (None, PROTOCOL_TLS, PROTOCOL_TLS_CLIENT):
@@ -455,8 +455,7 @@ def ssl_wrap_socket(
     if context is None:
         # Note: This branch of code and all the variables in it are only used in tests.
         # We should consider deprecating and removing this code.
-        context = create_urllib3_context(
-            ssl_version, cert_reqs, ciphers=ciphers)
+        context = create_urllib3_context(ssl_version, cert_reqs, ciphers=ciphers)
 
     if ca_certs or ca_cert_dir or ca_cert_data:
         try:
@@ -482,8 +481,7 @@ def ssl_wrap_socket(
 
     context.set_alpn_protocols(ALPN_PROTOCOLS)
 
-    ssl_sock = _ssl_wrap_socket_impl(
-        sock, context, tls_in_tls, server_hostname)
+    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)
     return ssl_sock
 
 
@@ -497,8 +495,7 @@ def is_ipaddress(hostname: str | bytes) -> bool:
     if isinstance(hostname, bytes):
         # IDN A-label bytes are ASCII compatible.
         hostname = hostname.decode("ascii")
-    return bool(_IPV4_RE.match(hostname)
-                or _BRACELESS_IPV6_ADDRZ_RE.match(hostname))
+    return bool(_IPV4_RE.match(hostname) or _BRACELESS_IPV6_ADDRZ_RE.match(hostname))
 
 
 def _is_key_file_encrypted(key_file: str) -> bool:

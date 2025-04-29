@@ -149,14 +149,15 @@ def match_hostname(
                     dnsnames.append(value)  # Defensive: for Python < 3.9.3
 
     if len(dnsnames) > 1:
-        raise CertificateError("hostname %r "
-                               "doesn't match either of %s" %
-                               (hostname, ", ".join(map(repr, dnsnames))))
+        raise CertificateError(
+            "hostname %r "
+            "doesn't match either of %s" % (hostname, ", ".join(map(repr, dnsnames)))
+        )
     elif len(dnsnames) == 1:
         raise CertificateError(
             f"hostname {
                 hostname!r} doesn't match {
-                dnsnames[0]!r}")
+                dnsnames[0]!r}"
+        )
     else:
-        raise CertificateError(
-            "no appropriate subjectAltName fields were found")
+        raise CertificateError("no appropriate subjectAltName fields were found")

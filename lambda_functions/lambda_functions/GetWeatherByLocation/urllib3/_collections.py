@@ -61,8 +61,7 @@ def ensure_can_construct_http_header_dict(
         return None
 
 
-class RecentlyUsedContainer(
-        typing.Generic[_KT, _VT], typing.MutableMapping[_KT, _VT]):
+class RecentlyUsedContainer(typing.Generic[_KT, _VT], typing.MutableMapping[_KT, _VT]):
     """
     Provides a thread-safe dict-like container which maintains up to
     ``maxsize`` keys while throwing away the least-recently-used keys beyond
@@ -200,8 +199,7 @@ class HTTPHeaderDictItemView(set[tuple[str, str]]):
         if isinstance(item, tuple) and len(item) == 2:
             passed_key, passed_val = item
             if isinstance(passed_key, str) and isinstance(passed_val, str):
-                return self._headers._has_value_for_header(
-                    passed_key, passed_val)
+                return self._headers._has_value_for_header(passed_key, passed_val)
         return False
 
 
@@ -241,10 +239,7 @@ class HTTPHeaderDict(typing.MutableMapping[str, str]):
 
     _container: typing.MutableMapping[str, list[str]]
 
-    def __init__(
-            self,
-            headers: ValidHTTPHeaderSource | None = None,
-            **kwargs: str):
+    def __init__(self, headers: ValidHTTPHeaderSource | None = None, **kwargs: str):
         super().__init__()
         self._container = {}  # 'dict' is insert-ordered
         if headers is not None:
@@ -347,7 +342,8 @@ class HTTPHeaderDict(typing.MutableMapping[str, str]):
         if len(args) > 1:
             raise TypeError(
                 f"extend() takes at most 1 positional arguments ({
-                    len(args)} given)")
+                    len(args)} given)"
+            )
         other = args[0] if len(args) >= 1 else ()
 
         if isinstance(other, HTTPHeaderDict):
@@ -452,10 +448,7 @@ class HTTPHeaderDict(typing.MutableMapping[str, str]):
     def items(self) -> HTTPHeaderDictItemView:  # type: ignore[override]
         return HTTPHeaderDictItemView(self)
 
-    def _has_value_for_header(
-            self,
-            header_name: str,
-            potential_value: str) -> bool:
+    def _has_value_for_header(self, header_name: str, potential_value: str) -> bool:
         if header_name in self:
             return potential_value in self._container[header_name.lower()][1:]
         return False

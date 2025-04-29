@@ -128,8 +128,7 @@ def extract_cookies_to_jar(jar, request, response):
     :param request: our own requests.Request object
     :param response: urllib3.HTTPResponse object
     """
-    if not (hasattr(response, "_original_response")
-            and response._original_response):
+    if not (hasattr(response, "_original_response") and response._original_response):
         return
     # the _original_response field is the wrapped httplib.HTTPResponse object,
     req = MockRequest(request)
@@ -213,10 +212,8 @@ class RequestsCookieJar(cookielib.CookieJar, MutableMapping):
         # value:
         if value is None:
             remove_cookie_by_name(
-                self,
-                name,
-                domain=kwargs.get("domain"),
-                path=kwargs.get("path"))
+                self, name, domain=kwargs.get("domain"), path=kwargs.get("path")
+            )
             return
 
         if isinstance(value, Morsel):
@@ -484,7 +481,8 @@ def create_cookie(name, value, **kwargs):
     if badargs:
         raise TypeError(
             f"create_cookie() got unexpected keyword arguments: {
-                list(badargs)}")
+                list(badargs)}"
+        )
 
     result.update(kwargs)
     result["port_specified"] = bool(result["port"])
@@ -506,10 +504,7 @@ def morsel_to_cookie(morsel):
             raise TypeError(f"max-age: {morsel['max-age']} must be integer")
     elif morsel["expires"]:
         time_template = "%a, %d-%b-%Y %H:%M:%S GMT"
-        expires = calendar.timegm(
-            time.strptime(
-                morsel["expires"],
-                time_template))
+        expires = calendar.timegm(time.strptime(morsel["expires"], time_template))
     return create_cookie(
         comment=morsel["comment"],
         comment_url=bool(morsel["comment"]),
@@ -559,8 +554,7 @@ def merge_cookies(cookiejar, cookies):
         raise ValueError("You can only merge into CookieJar")
 
     if isinstance(cookies, dict):
-        cookiejar = cookiejar_from_dict(
-            cookies, cookiejar=cookiejar, overwrite=False)
+        cookiejar = cookiejar_from_dict(cookies, cookiejar=cookiejar, overwrite=False)
     elif isinstance(cookies, cookielib.CookieJar):
         try:
             cookiejar.update(cookies)

@@ -49,13 +49,7 @@ _TYPE_BODY_POSITION = typing.Union[int, _TYPE_FAILEDTELL]
 # The reason we do this in the negative instead of tracking methods
 # which 'should' have a body is because unknown methods should be
 # treated as if they were 'POST' which *does* expect a body.
-_METHODS_NOT_EXPECTING_BODY = {
-    "GET",
-    "HEAD",
-    "DELETE",
-    "TRACE",
-    "OPTIONS",
-    "CONNECT"}
+_METHODS_NOT_EXPECTING_BODY = {"GET", "HEAD", "DELETE", "TRACE", "OPTIONS", "CONNECT"}
 
 
 def make_headers(
@@ -159,8 +153,7 @@ def set_file_position(
     return pos
 
 
-def rewind_body(body: typing.IO[typing.AnyStr],
-                body_pos: _TYPE_BODY_POSITION) -> None:
+def rewind_body(body: typing.IO[typing.AnyStr], body_pos: _TYPE_BODY_POSITION) -> None:
     """
     Attempt to rewind body to a certain position.
     Primarily used for request redirects and retries.
@@ -187,7 +180,8 @@ def rewind_body(body: typing.IO[typing.AnyStr],
     else:
         raise ValueError(
             f"body_pos must be of type integer, instead it was {
-                type(body_pos)}.")
+                type(body_pos)}."
+        )
 
 
 class ChunksAndContentLength(typing.NamedTuple):

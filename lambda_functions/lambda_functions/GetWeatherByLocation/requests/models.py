@@ -164,9 +164,11 @@ class RequestEncodingMixin:
 
                     new_fields.append(
                         (
-                            field.decode("utf-8")
-                            if isinstance(field, bytes)
-                            else field,
+                            (
+                                field.decode("utf-8")
+                                if isinstance(field, bytes)
+                                else field
+                            ),
                             v.encode("utf-8") if isinstance(v, str) else v,
                         )
                     )
@@ -209,15 +211,12 @@ class RequestHooksMixin:
         """Properly register a hook."""
 
         if event not in self.hooks:
-            raise ValueError(
-                f'Unsupported event specified, with event name "{event}"')
+            raise ValueError(f'Unsupported event specified, with event name "{event}"')
 
         if isinstance(hook, Callable):
             self.hooks[event].append(hook)
         elif hasattr(hook, "__iter__"):
-            self.hooks[event].extend(
-                h for h in hook if isinstance(
-                    h, Callable))
+            self.hooks[event].extend(h for h in hook if isinstance(h, Callable))
 
     def deregister_hook(self, event, hook):
         """Deregister a previously registered hook.
@@ -482,8 +481,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             else:
                 query = enc_params
 
-        url = requote_uri(urlunparse(
-            [scheme, netloc, path, None, query, fragment]))
+        url = requote_uri(urlunparse([scheme, netloc, path, None, query, fragment]))
         self.url = url
 
     def prepare_headers(self, headers):
@@ -847,7 +845,8 @@ class Response:
         elif chunk_size is not None and not isinstance(chunk_size, int):
             raise TypeError(
                 f"chunk_size must be an int, it is instead a {
-                    type(chunk_size)}.")
+                    type(chunk_size)}."
+            )
         # simulate reading small chunks of the content
         reused_chunks = iter_slices(self._content, chunk_size)
 
@@ -900,14 +899,12 @@ class Response:
         if self._content is False:
             # Read the contents.
             if self._content_consumed:
-                raise RuntimeError(
-                    "The content for this response was already consumed")
+                raise RuntimeError("The content for this response was already consumed")
 
             if self.status_code == 0 or self.raw is None:
                 self._content = None
             else:
-                self._content = b"".join(
-                    self.iter_content(CONTENT_CHUNK_SIZE)) or b""
+                self._content = b"".join(self.iter_content(CONTENT_CHUNK_SIZE)) or b""
 
         self._content_consumed = True
         # don't need to release the connection; that's been handled by urllib3
@@ -968,8 +965,7 @@ class Response:
             encoding = guess_json_utf(self.content)
             if encoding is not None:
                 try:
-                    return complexjson.loads(
-                        self.content.decode(encoding), **kwargs)
+                    return complexjson.loads(self.content.decode(encoding), **kwargs)
                 except UnicodeDecodeError:
                     # Wrong UTF codec detected; usually because it's not UTF-8
                     # but some other 8-bit codec.  This is an RFC violation,

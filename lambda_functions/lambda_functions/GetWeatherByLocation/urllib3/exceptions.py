@@ -167,11 +167,7 @@ class NewConnectionError(ConnectTimeoutError, HTTPError):
 class NameResolutionError(NewConnectionError):
     """Raised when host name resolution fails."""
 
-    def __init__(
-            self,
-            host: str,
-            conn: HTTPConnection,
-            reason: socket.gaierror):
+    def __init__(self, host: str, conn: HTTPConnection, reason: socket.gaierror):
         message = f"Failed to resolve '{host}' ({reason})"
         self._host = host
         self._reason = reason

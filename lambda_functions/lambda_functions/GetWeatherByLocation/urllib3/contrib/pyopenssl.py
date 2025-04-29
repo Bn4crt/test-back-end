@@ -89,8 +89,7 @@ _stdlib_to_openssl_verify = {
     ssl.CERT_REQUIRED: OpenSSL.SSL.VERIFY_PEER
     + OpenSSL.SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
 }
-_openssl_to_stdlib_verify = {v: k for k,
-                             v in _stdlib_to_openssl_verify.items()}
+_openssl_to_stdlib_verify = {v: k for k, v in _stdlib_to_openssl_verify.items()}
 
 # The SSLvX values are the most likely to be missing in the future
 # but we check them all just to be sure.
@@ -211,7 +210,7 @@ def _dnsname_to_stdlib(name: str) -> str | None:
         try:
             for prefix in ["*.", "."]:
                 if name.startswith(prefix):
-                    name = name[len(prefix):]
+                    name = name[len(prefix) :]
                     return prefix.encode("ascii") + idna.encode(name)
             return idna.encode(name)
         except idna.core.IDNAError:
@@ -236,8 +235,7 @@ def get_subj_alt_name(peer_cert: X509) -> list[tuple[str, str]]:
     # We want to find the SAN extension. Ask Cryptography to locate it (it's
     # faster than looping in Python)
     try:
-        ext = cert.extensions.get_extension_for_class(
-            x509.SubjectAlternativeName).value
+        ext = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
     except x509.ExtensionNotFound:
         # No such extension, return the empty list.
         return []
@@ -269,8 +267,9 @@ def get_subj_alt_name(peer_cert: X509) -> list[tuple[str, str]]:
         for name in map(_dnsname_to_stdlib, ext.get_values_for_type(x509.DNSName))
         if name is not None
     ]
-    names.extend(("IP Address", str(name))
-                 for name in ext.get_values_for_type(x509.IPAddress))
+    names.extend(
+        ("IP Address", str(name)) for name in ext.get_values_for_type(x509.IPAddress)
+    )
 
     return names
 
@@ -328,7 +327,8 @@ class WrappedSocket:
     def recv_into(self, *args: typing.Any, **kwargs: typing.Any) -> int:
         try:
             return self.connection.recv_into(
-                *args, **kwargs)  # type: ignore[no-any-return]
+                *args, **kwargs
+            )  # type: ignore[no-any-return]
         except OpenSSL.SSL.SysCallError as e:
             if self.suppress_ragged_eofs and e.args == (-1, "Unexpected EOF"):
                 return 0
@@ -358,8 +358,7 @@ class WrappedSocket:
                 # type: ignore[no-any-return]
                 return self.connection.send(data)
             except OpenSSL.SSL.WantWriteError as e:
-                if not util.wait_for_write(
-                        self.socket, self.socket.gettimeout()):
+                if not util.wait_for_write(self.socket, self.socket.gettimeout()):
                     raise timeout() from e
                 continue
             except OpenSSL.SSL.SysCallError as e:
@@ -369,7 +368,7 @@ class WrappedSocket:
         total_sent = 0
         while total_sent < len(data):
             sent = self._send_until_done(
-                data[total_sent: total_sent + SSL_WRITE_BLOCKSIZE]
+                data[total_sent : total_sent + SSL_WRITE_BLOCKSIZE]
             )
             total_sent += sent
 
@@ -400,8 +399,8 @@ class WrappedSocket:
 
         if binary_form:
             return OpenSSL.crypto.dump_certificate(
-                OpenSSL.crypto.FILETYPE_ASN1,
-                x509)  # type: ignore[no-any-return]
+                OpenSSL.crypto.FILETYPE_ASN1, x509
+            )  # type: ignore[no-any-return]
 
         return {
             # type: ignore[dict-item]
@@ -461,9 +460,7 @@ class PyOpenSSLContext:
 
     @verify_mode.setter
     def verify_mode(self, value: ssl.VerifyMode) -> None:
-        self._ctx.set_verify(
-            _stdlib_to_openssl_verify[value],
-            _verify_callback)
+        self._ctx.set_verify(_stdlib_to_openssl_verify[value], _verify_callback)
 
     def set_default_verify_paths(self) -> None:
         self._ctx.set_default_verify_paths()
@@ -490,7 +487,8 @@ class PyOpenSSLContext:
         except OpenSSL.SSL.Error as e:
             raise ssl.SSLError(
                 f"unable to load trusted certificates: {
-                    e!r}") from e
+                    e!r}"
+            ) from e
 
     def load_cert_chain(
         self,
@@ -509,12 +507,12 @@ class PyOpenSSLContext:
         except OpenSSL.SSL.Error as e:
             raise ssl.SSLError(
                 f"Unable to load certificate chain: {
-                    e!r}") from e
+                    e!r}"
+            ) from e
 
     def set_alpn_protocols(self, protocols: list[bytes | str]) -> None:
         protocols = [util.util.to_bytes(p, "ascii") for p in protocols]
-        return self._ctx.set_alpn_protos(
-            protocols)  # type: ignore[no-any-return]
+        return self._ctx.set_alpn_protos(protocols)  # type: ignore[no-any-return]
 
     def wrap_socket(
         self,

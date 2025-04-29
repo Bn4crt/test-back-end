@@ -87,10 +87,7 @@ except ImportError:
     chardet_version = None
 
 
-def check_compatibility(
-        urllib3_version,
-        chardet_version,
-        charset_normalizer_version):
+def check_compatibility(urllib3_version, chardet_version, charset_normalizer_version):
     urllib3_version = urllib3_version.split(".")
     # Verify urllib3 isn't installed from git.
     assert urllib3_version != ["dev"]
@@ -135,7 +132,8 @@ def _check_cryptography(cryptography_version):
 
     if cryptography_version < [1, 3, 4]:
         warning = "Old version of cryptography ({}) may cause slowdown.".format(
-            cryptography_version)
+            cryptography_version
+        )
         warnings.warn(warning, RequestsDependencyWarning)
 
 
@@ -148,9 +146,8 @@ except (AssertionError, ValueError):
     warnings.warn(
         "urllib3 ({}) or chardet ({})/charset_normalizer ({}) doesn't match a supported "
         "version!".format(
-            urllib3.__version__,
-            chardet_version,
-            charset_normalizer_version),
+            urllib3.__version__, chardet_version, charset_normalizer_version
+        ),
         RequestsDependencyWarning,
     )
 

@@ -141,13 +141,8 @@ class BaseAdapter:
         super().__init__()
 
     def send(
-            self,
-            request,
-            stream=False,
-            timeout=None,
-            verify=True,
-            cert=None,
-            proxies=None):
+        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
+    ):
         """Sends PreparedRequest object. Returns Response object.
 
         :param request: The :class:`PreparedRequest <PreparedRequest>` being sent.
@@ -359,7 +354,8 @@ class HTTPAdapter(BaseAdapter):
             if conn.key_file and not os.path.exists(conn.key_file):
                 raise OSError(
                     f"Could not find the TLS key file, invalid path: {
-                        conn.key_file}")
+                        conn.key_file}"
+                )
 
     def build_response(self, req, resp):
         """Builds a :class:`Response <requests.Response>` object from a urllib3
@@ -446,11 +442,9 @@ class HTTPAdapter(BaseAdapter):
             portion of the Pool Key including scheme, hostname, and port. The
             second is a dictionary of SSLContext related parameters.
         """
-        return _urllib3_request_context(
-            request, verify, cert, self.poolmanager)
+        return _urllib3_request_context(request, verify, cert, self.poolmanager)
 
-    def get_connection_with_tls_context(
-            self, request, verify, proxies=None, cert=None):
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
         """Returns a urllib3 connection for the given request and TLS settings.
         This should not be called from user code, and is only exposed for use
         when subclassing the :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
@@ -473,7 +467,10 @@ class HTTPAdapter(BaseAdapter):
         proxy = select_proxy(request.url, proxies)
         try:
             host_params, pool_kwargs = self.build_connection_pool_key_attributes(
-                request, verify, cert, )
+                request,
+                verify,
+                cert,
+            )
         except ValueError as e:
             raise InvalidURL(e, request=request)
         if proxy:
@@ -509,10 +506,12 @@ class HTTPAdapter(BaseAdapter):
         :rtype: urllib3.ConnectionPool
         """
         warnings.warn(
-            ("`get_connection` has been deprecated in favor of "
-             "`get_connection_with_tls_context`. Custom HTTPAdapter subclasses "
-             "will need to migrate for Requests>=2.32.2. Please see "
-             "https://github.com/psf/requests/pull/6710 for more details."),
+            (
+                "`get_connection` has been deprecated in favor of "
+                "`get_connection_with_tls_context`. Custom HTTPAdapter subclasses "
+                "will need to migrate for Requests>=2.32.2. Please see "
+                "https://github.com/psf/requests/pull/6710 for more details."
+            ),
             DeprecationWarning,
         )
         proxy = select_proxy(url, proxies)
@@ -608,19 +607,13 @@ class HTTPAdapter(BaseAdapter):
         username, password = get_auth_from_url(proxy)
 
         if username:
-            headers["Proxy-Authorization"] = _basic_auth_str(
-                username, password)
+            headers["Proxy-Authorization"] = _basic_auth_str(username, password)
 
         return headers
 
     def send(
-            self,
-            request,
-            stream=False,
-            timeout=None,
-            verify=True,
-            cert=None,
-            proxies=None):
+        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
+    ):
         """Sends PreparedRequest object. Returns Response object.
 
         :param request: The :class:`PreparedRequest <PreparedRequest>` being sent.
@@ -655,8 +648,7 @@ class HTTPAdapter(BaseAdapter):
             proxies=proxies,
         )
 
-        chunked = not (
-            request.body is None or "Content-Length" in request.headers)
+        chunked = not (request.body is None or "Content-Length" in request.headers)
 
         if isinstance(timeout, tuple):
             try:

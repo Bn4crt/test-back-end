@@ -4,6 +4,7 @@ certifi.py
 
 This module returns the installation location of cacert.pem or its contents.
 """
+
 import sys
 import atexit
 
@@ -45,8 +46,7 @@ if sys.version_info >= (3, 11):
         return _CACERT_PATH
 
     def contents() -> str:
-        return files("certifi").joinpath(
-            "cacert.pem").read_text(encoding="ascii")
+        return files("certifi").joinpath("cacert.pem").read_text(encoding="ascii")
 
 elif sys.version_info >= (3, 7):
 
@@ -99,8 +99,8 @@ else:
     def read_text(
         package: Package,
         resource: Resource,
-        encoding: str = 'utf-8',
-        errors: str = 'strict'
+        encoding: str = "utf-8",
+        errors: str = "strict",
     ) -> str:
         with open(where(), encoding=encoding) as data:
             return data.read()

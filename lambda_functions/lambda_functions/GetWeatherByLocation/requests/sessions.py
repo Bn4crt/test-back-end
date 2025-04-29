@@ -5,6 +5,7 @@ requests.sessions
 This module provides a Session object to manage and persist settings across
 requests (cookies, auth, proxies).
 """
+
 import os
 import sys
 import time
@@ -72,11 +73,8 @@ def merge_setting(request_setting, session_setting, dict_class=OrderedDict):
 
     # Bypass if not a dictionary (e.g. verify)
     if not (
-        isinstance(
-            session_setting,
-            Mapping) and isinstance(
-            request_setting,
-            Mapping)):
+        isinstance(session_setting, Mapping) and isinstance(request_setting, Mapping)
+    ):
         return request_setting
 
     merged_setting = dict_class(to_key_val_list(session_setting))
@@ -230,10 +228,7 @@ class SessionRedirectMixin:
                 codes.permanent_redirect,
             ):
                 # https://github.com/psf/requests/issues/3490
-                purged_headers = (
-                    "Content-Length",
-                    "Content-Type",
-                    "Transfer-Encoding")
+                purged_headers = ("Content-Length", "Content-Type", "Transfer-Encoding")
                 for header in purged_headers:
                     prepared_request.headers.pop(header, None)
                 prepared_request.body = None
@@ -280,8 +275,7 @@ class SessionRedirectMixin:
                     **adapter_kwargs,
                 )
 
-                extract_cookies_to_jar(
-                    self.cookies, prepared_request, resp.raw)
+                extract_cookies_to_jar(self.cookies, prepared_request, resp.raw)
 
                 # extract redirect url, if any, for the next loop
                 url = self.get_redirect_target(resp)
@@ -321,8 +315,7 @@ class SessionRedirectMixin:
         """
         headers = prepared_request.headers
         scheme = urlparse(prepared_request.url).scheme
-        new_proxies = resolve_proxies(
-            prepared_request, proxies, self.trust_env)
+        new_proxies = resolve_proxies(prepared_request, proxies, self.trust_env)
 
         if "Proxy-Authorization" in headers:
             del headers["Proxy-Authorization"]
@@ -335,8 +328,7 @@ class SessionRedirectMixin:
         # urllib3 handles proxy authorization for us in the standard adapter.
         # Avoid appending this to TLS tunneled requests where it may be leaked.
         if not scheme.startswith("https") and username and password:
-            headers["Proxy-Authorization"] = _basic_auth_str(
-                username, password)
+            headers["Proxy-Authorization"] = _basic_auth_str(username, password)
 
         return new_proxies
 
@@ -691,8 +683,7 @@ class Session(SessionRedirectMixin):
         kwargs.setdefault("verify", self.verify)
         kwargs.setdefault("cert", self.cert)
         if "proxies" not in kwargs:
-            kwargs["proxies"] = resolve_proxies(
-                request, self.proxies, self.trust_env)
+            kwargs["proxies"] = resolve_proxies(request, self.proxies, self.trust_env)
 
         # It's possible that users might accidentally send a Request object.
         # Guard against that specific failure case.
@@ -750,11 +741,8 @@ class Session(SessionRedirectMixin):
         if not allow_redirects:
             try:
                 r._next = next(
-                    self.resolve_redirects(
-                        r,
-                        request,
-                        yield_requests=True,
-                        **kwargs))
+                    self.resolve_redirects(r, request, yield_requests=True, **kwargs)
+                )
             except StopIteration:
                 pass
 
@@ -792,11 +780,7 @@ class Session(SessionRedirectMixin):
         verify = merge_setting(verify, self.verify)
         cert = merge_setting(cert, self.cert)
 
-        return {
-            "proxies": proxies,
-            "stream": stream,
-            "verify": verify,
-            "cert": cert}
+        return {"proxies": proxies, "stream": stream, "verify": verify, "cert": cert}
 
     def get_adapter(self, url):
         """
