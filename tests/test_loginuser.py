@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest.mock import patch
 from lambda_functions.LoginUser.login_user import lambda_handler
