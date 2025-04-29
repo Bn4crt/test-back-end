@@ -5,6 +5,8 @@ import os  # ✅ This is what was missing
 from unittest.mock import patch, MagicMock
 from lambda_functions.GetWeatherByLocation.get_weather import lambda_handler
 
+
+
 class TestLambdaFunction(unittest.TestCase):
 
     @patch('lambda_functions.GetWeatherByLocation.get_weather.requests.get')
